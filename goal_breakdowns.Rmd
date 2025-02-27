@@ -1,0 +1,158 @@
+---
+title: "breaking_down_targets"
+output: html_document
+date: "2025-02-24"
+---
+
+```{r setup, include=FALSE}
+#install.packages("tidycensus")
+#install.packages("censusapi")
+#library(tidycensus)
+#library(tidyverse)
+#library(censusapi)
+```
+
+Goals:
+
+- Increase Vermont’s population to 802,000 residents by 2035 by recruiting and 
+retaining working-age people.
+  - Current population: 647,464
+-  Increase labor force participation rate to 70% by 2035   
+  - Add an average of 13,500 people to its workforce annually over 
+    the next 10-15 years
+- Increase Vermont’s non-seasonal housing stock to 350,000 homes by 2035
+  - 36,000 primary homes needed in VT over the next 5 years 
+    - 7,200 new homes annually over the next five years
+
+```{r}
+Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+
+state_fips <- 50
+
+test <- getCensus(
+  name = "acs/acs5",
+  vintage = 2020,
+  vars = c("NAME", "B01001_001E", "B19013_001E"),
+  region = "county:*",
+  regionin = paste0("state:", state_fips)
+)
+```
+
+```{r}
+head(test)
+```
+
+```{r}
+vt_pop <- sum(test$B01001_001E)
+vt_income <- sum(test$B19013_001E)
+
+test <- test %>%
+  rename( "population" = "B01001_001E", "median_household_income" = "B19013_001E") %>%
+  mutate(pop_proportion = (population/vt_pop),
+         income_proportion = (median_household_income/vt_income))
+head(test)
+```
+
+```{r}
+pop_goal <- 802000-647464
+goal_breakdown <- test %>%
+  select("NAME", "income_proportion", "pop_proportion") %>%
+  mutate(new_proportion_by_pop = floor(pop_proportion*pop_goal),
+         new_proportion_by_income = floor(income_proportion*pop_goal),
+         pop_income_index = (pop_proportion + income_proportion)/2,
+         new_proportion_by_index = floor(pop_income_index*pop_goal))
+head(goal_breakdown)
+```
+
+```{r}
+#install.packages("treemap")
+#library(treemap)
+```
+
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  mutate(label = paste(NAME, new_proportion_by_pop, sep=": "))
+
+treemap(goal_breakdown,
+            index="label",
+            vSize="new_proportion_by_pop",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = 
+          "Breakdown of New Population in Each County by Current Population"
+            )
+```
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  mutate(inc_label = paste(NAME, new_proportion_by_income, sep=": "))
+
+treemap(goal_breakdown,
+            index="inc_label",
+            vSize="new_proportion_by_income",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = "Breakdown of New Population in Each County by Income",
+            )
+```
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  # mutate(index_label = paste(NAME, "\n" , "\n", round(new_proportion_by_index/pop_goal*100,1),"%"))
+  mutate(index_label = paste(NAME, "\n" , "\n", round(new_proportion_by_index, -2), "people"))
+treemap(goal_breakdown,
+            index="index_label",
+            vSize="new_proportion_by_index",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = "Breakdown of New Population in Each County by Income/Population",
+            )
+```
+
+```{r}
+Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+
+state_fips <- 50
+
+towns <- getCensus(
+  name = "acs/acs5",
+  vintage = 2020,
+  vars = c("NAME", "B01001_001E", "B19013_001E"),
+  region = "county subdivision:*",
+  regionin = paste0("state:", state_fips)
+)
+head(towns, 30)
+```
+
+```{r}
+drop_na(towns)
+towns <- towns %>%
+  rename( "population" = "B01001_001E", "median_household_income" = "B19013_001E") %>%
+  separate(NAME, into = c("town", "county", "state"), sep = ", ") %>%
+  mutate(
+    town = str_remove_all(town, "(?i)\\btown\\b"),
+    county = str_remove_all(county, "(?i)\\bcounty\\b"),
+    town = str_trim(town),
+    county = str_trim(county),
+  )
+
+head(towns)
+```
+
+```{r}
+towns <- towns %>%
+  mutate(
+pop_proportion = (population/vt_pop),
+    income_proportion = (median_household_income/vt_income),
+    new_proportion_by_pop = floor(pop_proportion*pop_goal),
+    new_proportion_by_income = floor(income_proportion*pop_goal),
+    pop_income_index = (pop_proportion + income_proportion)/2,
+    new_proportion_by_index = floor(pop_income_index*pop_goal)
+)
+head(towns)
+```
+
