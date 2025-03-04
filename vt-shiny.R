@@ -59,7 +59,8 @@ vt_map <- left_join(vt_counties, census_data, by = "NAME")
 # Shiny App
 
 ui <- fluidPage(
-  titlePanel("Vermont Census Map"),
+  titlePanel("Vermont Futures Dashboard"),
+  p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
   sidebarLayout(
     sidebarPanel(
       selectInput("var", "Select Variable:", choices = c(census_variables$title))
@@ -75,8 +76,8 @@ server <- function(input, output, session) {
   output$map <- renderPlot({
     vt_map |>
       ggplot() +
-      geom_sf(aes(fill = .data[[input$var]])) +
-      theme_void()
+      geom_sf(aes(fill = !!as.symbol(input$var))) +
+      theme_void() 
   })
 }
 
