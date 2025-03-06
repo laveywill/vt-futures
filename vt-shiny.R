@@ -1,24 +1,17 @@
 
-# install.packages("tidycensus")
-# install.packages("censusapi")
-library(tidycensus)
+library(shiny)
+
+library(leaflet)
+library(sf)
 library(tidyverse)
+library(tigris)
 library(censusapi)
 
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
-state_fips <- 50
+state_fips <- 50 # VT
 
-# Initial test
-test <- getCensus(
-  name = "acs/acs5",
-  vintage = 2020,
-  vars = c("NAME", "B01001_001E", "B19013_001E"),
-  region = "county:*",
-  regionin = paste0("state:", state_fips)
-)
+# Data preparation
 
-
-# Dictionary replacement
 census_variables <- data.frame(
   code = c(
     "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
@@ -57,3 +50,35 @@ census_data <- census_data_raw |>
   mutate(
     NAME = gsub(" County, Vermont", "", NAME)
   )
+
+vt_counties <- counties(state = "VT", cb = TRUE, class = "sf", year = "2022")
+
+vt_map <- left_join(vt_counties, census_data, by = "NAME")
+
+
+# Shiny App
+
+ui <- fluidPage(
+  titlePanel("Vermont Futures Dashboard"),
+  p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("var", "Select Variable:", choices = c(census_variables$title))
+      ),
+    mainPanel(
+      plotOutput("map")
+    )
+  )
+)
+
+
+server <- function(input, output, session) {
+  output$map <- renderPlot({
+    vt_map |>
+      ggplot() +
+      geom_sf(aes(fill = !!as.symbol(input$var))) +
+      theme_void() 
+  })
+}
+
+shinyApp(ui, server)

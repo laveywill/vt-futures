@@ -1,0 +1,256 @@
+---
+title: "VT Futures"
+author: "Eujin Chae"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r}
+library(censusapi)
+library(tidyverse)
+library(dplyr)
+
+Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+state_fips <- 50
+
+# Initial test
+test <- getCensus(
+  name = "acs/acs5",
+  vintage = 2020,
+  vars = c("NAME", "B01001_001E", "B19013_001E"),
+  region = "county:*",
+  regionin = paste0("state:", state_fips)
+)
+
+
+# Dictionary replacement
+census_variables <- data.frame(
+  code = c(
+    "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
+    "B19013_001E", "B19001_002E", "B19301_001E", "B17001_002E", "B25077_001E", "B25064_001E",
+    "B23025_002E", "B23025_005E", "B23006_002E", "B24011_001E",
+    "B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E",
+    "B25001_001E", "B25002_002E", "B25002_003E", "B25003_002E", "B25003_003E",
+    "B08006_001E", "B08006_003E", "B08006_008E", "B08013_001E",
+    "B27001_001E", "B27001_005E", "B27001_008E", "B27001_012E"
+  ),
+  title = c(
+    "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
+    "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population",
+    "Median Household Income", "Household Income Brackets", "Per Capita Income", "Population Below Poverty Level", 
+    "Median Home Value", "Median Gross Rent",
+    "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+    "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
+    "Total Housing Units", "Occupied Housing Units", "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units",
+    "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)",
+    "Total Population for Health Insurance Coverage", "Population with Public Health Insurance", 
+    "Population with Private Health Insurance", "Population with No Health Insurance"
+  ),
+  stringsAsFactors = FALSE
+)
+
+#raw census data of VT counties
+census_data_raw <- getCensus(
+  name = "acs/acs5",
+  vintage = 2022,
+  vars = c("NAME", census_variables$code),
+  region = "county:*",
+  regionin = paste0("state:", state_fips)
+)
+
+#census data of VT counties w variables named  
+census_data <- census_data_raw |> 
+  rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
+  mutate(
+    NAME = gsub(" County, Vermont", "", NAME)
+  )
+
+```
+
+```{r}
+#plotting the labor force population by counties
+library(ggplot2)
+
+census_df1 <- census_data %>% 
+  select(
+    NAME, 
+    `Total Population`, 
+    `Labor Force`, 
+    `Civilian Employed Population`, 
+    `Unemployed Population`
+  ) %>% 
+  mutate(
+    labor_force_pr = (`Labor Force`/`Total Population`)*100
+  )
+
+ggplot(data = census_df1, aes(x = reorder(NAME, labor_force_pr), y = labor_force_pr, fill = labor_force_pr))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  labs(title = "Labor Force Participation Rate by County", x = "County", y = "Labor Force Participation Rate (%) ")+
+  scale_fill_gradient(low = "steelblue", high = "darkred")+  
+  theme_minimal(base_size = 14)+
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        legend.position = "none")
+
+  
+```
+
+
+```{r}
+#code to see the labels for each census variable
+
+acs_vars <- load_variables(2020, "acs5", cache = TRUE)
+
+# Optional: Save the variables to a CSV file for easy reference
+write.csv(acs_vars, "acs5_2020_variables.csv", row.names = FALSE)
+
+view(acs_vars)
+
+```
+
+
+
+```{r}
+library(tidycensus)
+
+library(dplyr)
+
+# Set Census API Key (only needed once per session)
+census_api_key("d2c6932eca5b04592aaa4b32840c534b274382dc", install = TRUE, overwrite = TRUE)
+
+# Reload environment if needed
+readRenviron("~/.Renviron")
+
+# Define the correct age-related variables
+age_vars <- paste0("B01001_", sprintf("%03d", 2:49))
+
+# Fetch Vermont age data
+vermont_age_data <- get_acs(
+  geography = "county",
+  state = "VT",
+  variables = age_vars,
+  year = 2020,
+  survey = "acs5"
+)
+
+# Define the age-related labor force variables
+labor_force_vars <- paste0("B23001_", sprintf("%03d", 1:173))
+
+# Fetch Vermont age labor force data
+vermont_lf_age_data <- get_acs(
+  geography = "county",
+  state = "VT",
+  variables = labor_force_vars,
+  year = 2020,
+  survey = "acs5"
+)
+
+
+
+
+
+# aggregating the age groups into six groups
+
+acs_vars <- rename(acs_vars, variable =  name)
+
+
+joined_df <- left_join(vermont_age_data, acs_vars, by = "variable") %>%
+  group_by(NAME) %>%
+  summarise(
+    age_16_to_24 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!15 to 17 years", "Estimate!!Total:!!Female:!!15 to 17 years",
+      "Estimate!!Total:!!Male:!!18 and 19 years", "Estimate!!Total:!!Female:!!18 and 19 years",
+      "Estimate!!Total:!!Male:!!20 years", "Estimate!!Total:!!Female:!!20 years",
+      "Estimate!!Total:!!Male:!!21 years", "Estimate!!Total:!!Female:!!21 years",
+      "Estimate!!Total:!!Male:!!22 to 24 years", "Estimate!!Total:!!Female:!!22 to 24 years"
+    )], na.rm = TRUE),
+
+    age_25_to_34 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!25 to 29 years", "Estimate!!Total:!!Female:!!25 to 29 years",
+      "Estimate!!Total:!!Male:!!30 to 34 years", "Estimate!!Total:!!Female:!!30 to 34 years"
+    )], na.rm = TRUE),
+
+    age_35_to_44 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!35 to 39 years", "Estimate!!Total:!!Female:!!35 to 39 years",
+      "Estimate!!Total:!!Male:!!40 to 44 years", "Estimate!!Total:!!Female:!!40 to 44 years"
+    )], na.rm = TRUE),
+
+    age_45_to_54 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!45 to 49 years", "Estimate!!Total:!!Female:!!45 to 49 years",
+      "Estimate!!Total:!!Male:!!50 to 54 years", "Estimate!!Total:!!Female:!!50 to 54 years"
+    )], na.rm = TRUE),
+
+    age_55_to_64 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!55 to 59 years", "Estimate!!Total:!!Female:!!55 to 59 years",
+      "Estimate!!Total:!!Male:!!60 and 61 years", "Estimate!!Total:!!Female:!!60 and 61 years",
+      "Estimate!!Total:!!Male:!!62 to 64 years", "Estimate!!Total:!!Female:!!62 to 64 years"
+    )], na.rm = TRUE),
+
+    age_65_and_over = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!65 and 66 years", "Estimate!!Total:!!Female:!!65 and 66 years",
+      "Estimate!!Total:!!Male:!!67 to 69 years", "Estimate!!Total:!!Female:!!67 to 69 years",
+      "Estimate!!Total:!!Male:!!70 to 74 years", "Estimate!!Total:!!Female:!!70 to 74 years",
+      "Estimate!!Total:!!Male:!!75 to 79 years", "Estimate!!Total:!!Female:!!75 to 79 years",
+      "Estimate!!Total:!!Male:!!80 to 84 years", "Estimate!!Total:!!Female:!!80 to 84 years",
+      "Estimate!!Total:!!Male:!!85 years and over", "Estimate!!Total:!!Female:!!85 years and over"
+    )], na.rm = TRUE)
+  )
+
+
+lf_age_groups <- left_join(vermont_lf_age_data, acs_vars, by = "variable") %>%
+  group_by(NAME) %>% 
+  summarise(
+    age_16_to_24 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!16 to 19 years:!!In labor force:", "Estimate!!Total:!!Female:!!16 to 19 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!20 and 21 years:!!In labor force:", "Estimate!!Total:!!Female:!!20 and 21 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!22 to 24 years:!!In labor force:", "Estimate!!Total:!!Female:!!22 to 24 years:!!In labor force:"
+    )], na.rm = TRUE),
+
+    age_25_to_34 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!25 to 29 years:!!In labor force:", "Estimate!!Total:!!Female:!!25 to 29 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!30 to 34 years:!!In labor force:", "Estimate!!Total:!!Female:!!30 to 34 years:!!In labor force:"
+    )], na.rm = TRUE),
+
+    age_35_to_44 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!35 to 44 years:!!In labor force:", "Estimate!!Total:!!Female:!!35 to 44 years:!!In labor force:"
+    )], na.rm = TRUE),
+
+    age_45_to_54 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!45 to 54 years:!!In labor force:", "Estimate!!Total:!!Female:!!45 to 54 years:!!In labor force:"
+    )], na.rm = TRUE),
+
+    age_55_to_64 = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!55 to 59 years:!!In labor force:", "Estimate!!Total:!!Female:!!55 to 59 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!60 and 61 years:!!In labor force:", "Estimate!!Total:!!Female:!!60 and 61 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!62 to 64 years:!!In labor force:", "Estimate!!Total:!!Female:!!62 to 64 years:!!In labor force:"
+    )], na.rm = TRUE),
+
+    age_65_and_over = sum(estimate[label %in% c(
+      "Estimate!!Total:!!Male:!!65 and 69 years:!!In labor force:", "Estimate!!Total:!!Female:!!65 and 69 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!70 to 74 years:!!In labor force:", "Estimate!!Total:!!Female:!!70 to 74 years:!!In labor force:",
+      "Estimate!!Total:!!Male:!!75 years and over:!!In labor force:", "Estimate!!Total:!!Female:!!75 years and over:!!In labor force:"
+    )], na.rm = TRUE)
+  )
+
+
+
+total_pop <- census_df1 %>% #pulling out the total_pop for each county
+  select("Total Population")
+
+joined_df_2 <- cbind(joined_df, total_pop) %>% 
+  pivot_longer(cols = -c(NAME,`Total Population`),
+               names_to = "Age Groups",
+               values_to = "Count")
+  
+lf_age_groups <- lf_age_groups %>% 
+  pivot_longer(cols = -c(NAME),
+               names_to = "Age Groups",
+               values_to = "Labor Force Count")
+
+cleaned_df_age_distrbution <- left_join(joined_df_2, lf_age_groups)
+
+```
+
+
+
