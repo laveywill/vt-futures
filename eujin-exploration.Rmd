@@ -254,3 +254,153 @@ cleaned_df_age_distrbution <- left_join(joined_df_2, lf_age_groups)
 
 
 
+
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+
+addison <- cleaned_df_age_distrbution %>% 
+  filter(NAME == "Addison County, Vermont")
+
+
+addison2 <- addison %>%
+  mutate(`Non Labor Force Count` = Count - `Labor Force Count`) %>%
+  pivot_longer(cols = c(`Labor Force Count`, `Non Labor Force Count`),
+               names_to = "Population_Type",
+               values_to = "Population") %>%
+ 
+  mutate(Population_Type = factor(Population_Type, levels = c("Labor Force Count", "Non Labor Force Count")))
+
+
+ggplot(addison2, aes(x = reorder(`Age Groups`, Population), y = Population, fill = Population_Type)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+  coord_flip() +
+  labs(title = "Addison Labor Force and Population by Age", 
+       x = "Age Group", 
+       y = "Population") +
+  scale_fill_manual(values = c("Labor Force Count" = "navyblue", 
+                               "Non Labor Force Count" = "steelblue1"),
+                    name = "Population Segment",
+                    labels = c("Labor Force", "Population")) +
+  scale_y_continuous(limits = c(0, 10000)) +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
+
+```
+
+
+
+
+```{r}
+create_county_plot_3 <- function(df, county) {
+  
+  county_full <- paste0(toTitleCase(county), " County, Vermont")
+  
+  county_data <- df %>% 
+    filter(NAME == county_full)
+  
+  county_data_long <- county_data %>%
+    mutate(`Non Labor Force Count` = Count - `Labor Force Count`) %>%
+    pivot_longer(cols = c(`Labor Force Count`, `Non Labor Force Count`),
+                 names_to = "Population_Type",
+                 values_to = "Population") %>%
+    mutate(Population_Type = factor(Population_Type, 
+                                    levels = c("Labor Force Count", "Non Labor Force Count")),
+           `Age Groups` = gsub("_", " ", `Age Groups`))  # Replace underscores with spaces
+  
+  # Compute the maximum stacked population across age groups
+  max_population <- county_data_long %>%
+    group_by(`Age Groups`) %>%
+    summarise(total_population = sum(Population)) %>%
+    summarise(max_total = max(total_population)) %>%
+    pull(max_total)
+  
+  # Optionally add a small margin (e.g., 10%) above the maximum value
+  upper_limit <- max_population * 1.1
+  
+  p <- ggplot(county_data_long, aes(x = reorder(`Age Groups`, Population), y = Population, fill = Population_Type)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    coord_flip() +
+    labs(title = paste0(county_full, " Labor Force and Population by Age"), 
+         x = "Age Group", 
+         y = "Population") +
+    scale_fill_manual(values = c("Labor Force Count" = "lightblue", 
+                                 "Non Labor Force Count" = "#0071ce"),
+                      name = "Population Segment",
+                      labels = c("Labor Force", "Population")) +
+    scale_y_continuous(limits = c(0, upper_limit)) +
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
+  
+  return(p)
+}
+
+create_county_plot_3(cleaned_df_age_distrbution, "bennington")
+
+```
+
+```{r}
+create_county_plot_4 <- function(df, county) {
+  
+  county_full <- paste0(toTitleCase(county), " County, Vermont")
+  
+  county_data <- df %>% 
+    filter(NAME == county_full)
+  
+  county_data_long <- county_data %>%
+    mutate(`Non Labor Force Count` = Count - `Labor Force Count`) %>%
+    pivot_longer(cols = c(`Labor Force Count`, `Non Labor Force Count`),
+                 names_to = "Population_Type",
+                 values_to = "Population") %>%
+    mutate(Population_Type = factor(Population_Type, 
+                                    levels = c("Labor Force Count", "Non Labor Force Count")),
+           `Age Groups` = gsub("_", " ", `Age Groups`))
+  
+  
+  county_data_long <- county_data_long %>%
+    group_by(`Age Groups`) %>%
+    mutate(total_population = sum(Population)) %>%
+    ungroup() %>%
+    mutate(labor_percent = ifelse(Population_Type == "Labor Force Count",
+                                  Population / total_population * 100, NA))
+  
+  
+  max_population <- county_data_long %>%
+    group_by(`Age Groups`) %>%
+    summarise(total_population = sum(Population)) %>%
+    summarise(max_total = max(total_population)) %>%
+    pull(max_total)
+  
+  
+  upper_limit <- max_population * 1.1
+  
+  p <- ggplot(county_data_long, aes(x = reorder(`Age Groups`, total_population), 
+                                    y = Population, fill = Population_Type)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    
+    geom_text(data = filter(county_data_long, Population_Type == "Labor Force Count"),
+              aes(label = paste0(round(labor_percent, 1), "%")),
+              position = position_stack(vjust = 0.5, reverse = TRUE),
+              color = "black", size = 3) +
+    coord_flip() +
+    labs(title = paste0(county_full, " Labor Force and Population by Age"), 
+         x = "Age Group", 
+         y = "Population") +
+    scale_fill_manual(values = c("Labor Force Count" = "lightblue", 
+                                 "Non Labor Force Count" = "#0071ce"),
+                      name = "Population Segment",
+                      labels = c("Labor Force", "Population")) +
+    scale_y_continuous(limits = c(0, upper_limit)) +
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
+  
+  return(p)
+}
+
+create_county_plot_4(cleaned_df_age_distrbution, "caledonia")
+```
+
