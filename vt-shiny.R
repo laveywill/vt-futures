@@ -6,6 +6,8 @@ library(sf)
 library(tidyverse)
 library(tigris)
 library(censusapi)
+library(bslib)
+library(DT)
 
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 state_fips <- 50 # VT
@@ -59,26 +61,58 @@ vt_map <- left_join(vt_counties, census_data, by = "NAME")
 # Shiny App
 
 ui <- fluidPage(
-  titlePanel("Vermont Futures Dashboard"),
+  titlePanel("Vermont Futures: Interactive Dashboard"),
   p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("var", "Select Variable:", choices = c(census_variables$title))
-      ),
-    mainPanel(
-      plotOutput("map")
+  
+  div(
+    style = "display: flex; justify-content: center;",
+    navset_card_underline(
+      
+      nav_panel(
+        title = "Population", 
+        fluidRow(
+          title = "State Population",
+          column(4, textOutput("pop_text")),
+          column(6, dataTableOutput("pop_state"), offset = 2)
+          ),
+        fluidRow(
+          title = "County Population",
+          column(12, plotOutput("pop"))
+        )
+        ),
+      
+      
+      nav_panel("Jobs", p("Jobs data at the state level."), tableOutput("jobs")),
+      nav_panel("Homes", p("Homes data at the state level."), tableOutput("homes")),
+      nav_panel("Etc...", p("Etc..."), tableOutput("etc"))
     )
   )
 )
 
 
 server <- function(input, output, session) {
-  output$map <- renderPlot({
+  
+  output$pop_text <- renderText({
+    "This is some test text for the page"
+  })
+  
+  output$pop_state <- renderDataTable({
+    vt_map |> 
+      group_by(NAME) |> 
+      select(NAME, `Total Population`)
+  })
+  
+  output$pop <- renderPlot({
     vt_map |>
       ggplot() +
-      geom_sf(aes(fill = !!as.symbol(input$var))) +
-      theme_void() 
+      geom_sf(aes(fill = `Total Population`)) +
+      theme_void()
   })
+  
+  output$jobs <- renderDataTable(
+    vt_map |> 
+      filter()
+  )
 }
 
 shinyApp(ui, server)

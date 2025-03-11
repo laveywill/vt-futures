@@ -39,8 +39,8 @@ age_distribution_data <- function(year) {
   colnames(age_long) <- c("population", "code") 
   
   age_groups <- data.frame(
-    age_group = names(age_group_mapping),
-    total_population = sapply(age_group_mapping, function(cols) {
+    age_group = names(age_group_patterns),
+    total_population = sapply(age_group_patterns, function(cols) {
       sum(age_long$population[age_long$code %in% cols], na.rm = TRUE)
     })
   ) %>% select("total_population") %>%
