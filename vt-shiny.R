@@ -9,6 +9,7 @@ library(censusapi)
 library(bslib)
 library(DT)
 
+source("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/population.R")
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 state_fips <- 50 # VT
 
@@ -94,7 +95,13 @@ ui <- page_fluid(
             ),
             plotOutput("pop")
           )
-        )
+        ),
+        card(
+          card_header("Vermont Age Distribution (2023)"),
+          card_body(
+            plotOutput("age_plot", height = "700px")
+          )
+        ),
       )
     ),
  
