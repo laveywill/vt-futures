@@ -3,44 +3,49 @@ Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 
 # STATE LEVEL POPULATION DATA
 age_distribution_data <- function(year) {
-    age <- getCensus(
-      name = "acs/acs5",
-      vintage = year,
-      vars = paste0("B01001_", str_pad(3:49, 3, pad="0"), "E"),
-      region = "state:50"
-    ) %>%
-      select(-c("state"))
-    
-    age_long <- as.data.frame(t(age))
-    colnames(age_long) <- "population"
-    age_long$variable <- rownames(age_long) 
-    age_long$population <- as.numeric(age_long$population)  
-    
-    # Age group pattern mapping
-    age_group_patterns <- list(
-      "Under 5 years" = "B01001_0(03|27)E",  
-      "5 to 9 years" = "B01001_0(04|28)E",  
-      "10 to 14 years" = "B01001_0(05|29)E",  
-      "15 to 19 years" = "B01001_0(06|07|30|31)E",  
-      "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
-      "25 to 29 years" = "B01001_0(11|35)E",  
-      "30 to 34 years" = "B01001_0(12|36)E",  
-      "35 to 39 years" = "B01001_0(13|37)E",  
-      "40 to 44 years" = "B01001_0(14|38)E",  
-      "45 to 49 years" = "B01001_0(15|39)E",  
-      "50 to 54 years" = "B01001_0(16|40)E",  
-      "55 to 59 years" = "B01001_0(17|41)E",  
-      "60 to 64 years" = "B01001_0(18|19|42|43)E",  
-      "65 to 69 years" = "B01001_0(20|21|44|45)E",  
-      "70 to 74 years" = "B01001_0(22|46)E",  
-      "75 to 79 years" = "B01001_0(23|47)E",  
-      "80 to 84 years" = "B01001_0(24|48)E",  
-      "85 years and over" = "B01001_0(25|49)E"
-    )
-    
-    age_long$age_group <- sapply(age_long$variable, function(var) {
-      matched_group <- names(Filter(function(pattern) str_detect(var, pattern), age_group_patterns))
-      if (length(matched_group) > 0) return(matched_group) else return(NA)
+  # I will later add functionality to filter by county so we can
+  # get the age distribution by county in the app 
+  age <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = paste0("B01001_", str_pad(3:49, 3, pad="0"), "E"),
+    region = "state:50"
+  ) %>%
+    select(-c("state"))
+  
+  age_long <- as.data.frame(t(age))
+  
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_00(3|27)E",  
+    "5 to 9 years" = "B01001_00(4|28)E",  
+    "10 to 14 years" = "B01001_00(5|29)E",  
+    "15 to 19 years" = "B01001_00(6|7|30|31)E",  
+    "20 to 24 years" = "B01001_00(8|9|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_00(11|35)E",  
+    "30 to 34 years" = "B01001_00(12|36)E",  
+    "35 to 39 years" = "B01001_00(13|37)E",  
+    "40 to 44 years" = "B01001_00(14|38)E",  
+    "45 to 49 years" = "B01001_00(15|39)E",  
+    "50 to 54 years" = "B01001_00(16|40)E",  
+    "55 to 59 years" = "B01001_00(17|41)E",  
+    "60 to 64 years" = "B01001_00(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_00(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_00(22|46)E",  
+    "75 to 79 years" = "B01001_00(23|47)E",  
+    "80 to 84 years" = "B01001_00(24|48)E",  
+    "85 years and over" = "B01001_00(25|49)E"
+  )
+  
+  
+  
+  age_long <- as.data.frame(age_long)
+  age_long$code <- rownames(age_long)
+  colnames(age_long) <- c("population", "code") 
+  
+  age_groups <- data.frame(
+    age_group = names(age_group_patterns),
+    total_population = sapply(age_group_patterns, function(cols) {
+      sum(age_long$population[age_long$code %in% cols], na.rm = TRUE)
     })
     
     age_summary <- age_long %>%
