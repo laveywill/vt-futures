@@ -515,7 +515,7 @@ ggplot(prime_working_age_lfpr, aes(x = reorder(NAME, prime_labor_pr), y = prime_
             size = 3, 
             color = "black") +
   coord_flip() +
-  labs(title = "Prime Working-Age Adults Labor Force Participation Rate by County",
+  labs(title = "2020 Prime Working-Age Adults Labor Force Participation Rate by County",
        x = "County",
        y = "Labor Force Participation Rate (%)" ,
        caption = "Source: American Community Survey (ACS)")+
