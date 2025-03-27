@@ -1,5 +1,7 @@
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 
+pth <- getwd()
+
 # STATE LEVEL POPULATION DATA
 age_distribution_data <- function(year) {
   age <- getCensus(
@@ -105,13 +107,13 @@ build_county_caps_df <- function() {
     ) %>% select(County, pop_goal)
   
   latent_cap <- 
-    read_csv("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/latent-capacity.csv") %>%
+    read_csv(paste0(pth, "/latent-capacity.csv")) %>%
     rename(latent_cap = `Latent Capacity`) %>%
     group_by(County) %>%
     summarise(latent_cap = sum(latent_cap))
   
   jobs_homes <- 
-    read.csv("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/JobsHomesMap_data.csv", sep = "\t", fileEncoding = "UTF-16") %>%
+    read.csv(paste0(pth, "/JobsHomesMap_data.csv"), sep = "\t", fileEncoding = "UTF-16") %>%
     drop_na() %>%
     mutate(jobs_homes_diff = Occupied.homes - Jobs) %>%
     group_by(County) %>%
@@ -119,7 +121,7 @@ build_county_caps_df <- function() {
     mutate(County = str_trim(str_remove(County, "County")))
   
   school_latency <- 
-    read_excel("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/school_latency.xlsx", sheet = "Data")  %>%
+    read_excel(paste0(pth, "/school_latency.xlsx"), sheet = "Data")  %>%
     rename(latent_cap = `Latent Capacity`) %>%
     drop_na() %>%
     group_by(County) %>%

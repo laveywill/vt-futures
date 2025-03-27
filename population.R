@@ -9,7 +9,8 @@ library(data.table)
 library(censusapi)
 library(readxl)
 
-source("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/state_data_functions.R")
+pth <- getwd()
+source(paste0(pth, "/state_data_functions.R"))
 
 vt_age_groups_2023 <- age_distribution_data(2023)
 

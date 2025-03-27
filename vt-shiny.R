@@ -9,8 +9,9 @@ library(censusapi)
 library(bslib)
 library(DT)
 
-source("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/population.R")
-source("/Users/carlymcadam/Desktop/College/Midd2024-25/Spring2025/STAT711/vt-futures/state_data_functions.R")
+pth <- getwd()
+source(paste0(pth, "/population.R"))
+source(paste0(pth, "/state_data_functions.R"))
 
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 state_fips <- 50 # VT
