@@ -129,7 +129,7 @@ create_prime_working_age_lfpr <- function(data) {
          x = "County",
          y = "Labor Force Participation Rate (%)" ,
          caption = "Source: American Community Survey (ACS)")+
-    scale_fill_gradient(low = "darkred", high = "steelblue") +
+    scale_fill_gradient(low = "steelblue", high = "darkred") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
     scale_x_discrete(labels = function(x) sub(" County,.*", "", x)) +
     theme_minimal(base_size = 15) +
@@ -137,6 +137,36 @@ create_prime_working_age_lfpr <- function(data) {
           axis.text.x = element_text(color = "black"),
           axis.text.y = element_text(color = "black"),
           legend.position = "none")
+}
+
+
+
+#creating the dependency ratio plot
+plot_dependency_ratio <- function(data, title = "Dependency Ratio by County") {
+  ggplot(data, aes(x = reorder(NAME, dependency_ratio), y = dependency_ratio, fill = dependency_ratio)) +
+    geom_col(width = 0.7) +
+    geom_text(aes(label = sprintf("%.2f", dependency_ratio)), 
+              hjust = -0.1, 
+              size = 3, 
+              color = "black") +
+    coord_flip() +
+    labs(
+      title = title,
+      x = "County",
+      y = "Dependency Ratio",
+      caption = "Note: Dependency ratio = (Age 0–14 + Age 65+) / (Age 16–64)\nSource: American Community Survey (ACS)"
+    ) +
+    scale_fill_gradient(low = "steelblue", high = "darkred") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+    scale_x_discrete(labels = function(x) sub(" County,.*", "", x)) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 19 ),
+      axis.text.x = element_text(color = "black"),
+      axis.text.y = element_text(color = "black"),
+      plot.caption = element_text(hjust = 0, size = 8),
+      legend.position = "none"
+    )
 }
 
 
@@ -157,10 +187,11 @@ ui <- fluidPage(
                           "Washington County"="washington",
                           "Windham County"= "windham",
                           "Windsor County"= "windsor")),
-  plotOutput(outputId = "plot2"),
+  plotOutput(outputId = "plot1"),
   br(),  # Adds a simple line break
   tags$div(style = "height: 10px;"),
-  plotOutput(outputId = "plot1")
+  plotOutput(outputId = "plot2"),
+  plotOutput(outputId = "dependencyPlot")
 )
 
 server <- function(input, output, session) {
@@ -172,6 +203,10 @@ server <- function(input, output, session) {
   output$plot2 <- renderPlot({
     #function place
     create_prime_working_age_lfpr(prime_working_age_lfpr)
+  })
+  
+  output$dependencyPlot <- renderPlot({
+    plot_dependency_ratio(dependency_ratio)
   })
   
 }
