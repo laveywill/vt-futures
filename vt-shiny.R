@@ -34,7 +34,7 @@ theme <- bs_theme(
 
 ui <- page_fluid(
   theme = theme,
-  titlePanel("Vermont Futures: Interactive Dashboard"),
+  titlePanel("Vermont Futures Project: Interactive Dashboard"),
   p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
   
   navset_card_pill(
@@ -116,7 +116,25 @@ ui <- page_fluid(
       )
     ),
  
-    nav_panel("Jobs", p("Jobs data at the state level."), tableOutput("jobs")),
+    nav_panel("Jobs",
+      layout_column_wrap(
+        width = 1,
+        card(
+          card_header(class = "bg-primary", "State Jobs"),
+          card_body(
+            sidebarLayout(
+              sidebarPanel(
+                p("placeholder text")
+              ),
+              mainPanel(
+                p("placeholder plot")
+                # plotOutput("job_plot", height = "600px")
+              )
+            )
+          )
+        )
+      )
+    ),
     
     nav_panel("Homes", p("Homes data at the state level."), tableOutput("homes")),
     
@@ -143,17 +161,6 @@ server <- function(input, output, session) {
     county_caps_df() %>%
       filter(County == input$selected_county) %>%
       pivot_longer(cols = -County, names_to = "Metric", values_to = "Value")
-  })
-  
-  
-  output$pop_text <- renderText({
-    "This is some test text for the page"
-  })
-  
-  output$pop_state <- renderDataTable({
-    census_data |> 
-      group_by(NAME) |> 
-      select(NAME, `Total Population`)
   })
   
   output$pop <- renderPlot({
@@ -204,10 +211,7 @@ server <- function(input, output, session) {
             plot.title = element_text(size = 22, face = "bold"))
   })
   
-  output$jobs <- renderDataTable(
-    vt_map |> 
-      filter()
-  )
+
 }
 
 shinyApp(ui, server)
