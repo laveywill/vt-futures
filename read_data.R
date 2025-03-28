@@ -48,7 +48,7 @@ census_data <- function(year) {
     regionin = "state:50",
   )
   
-  county_census_data <- census_data_raw |> 
+  county_census_data <- county_census_data_raw |> 
     rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
     mutate(
       NAME = gsub(" County, Vermont", "", NAME)
@@ -63,7 +63,7 @@ census_data <- function(year) {
     regionin = "state:50",
   )
   
-  place_census_data <- census_data_raw |> 
+  place_census_data <- place_census_data_raw |> 
     rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
     mutate(
       NAME = gsub(" village, Vermont", "", NAME),
