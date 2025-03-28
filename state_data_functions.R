@@ -113,9 +113,9 @@ build_county_caps_df <- function() {
     summarise(latent_cap = sum(latent_cap))
   
   jobs_homes <- 
-    read.csv(paste0(pth, "/JobsHomesMap_data.csv"), sep = "\t", fileEncoding = "UTF-16") %>%
+    read_csv(paste0(pth, "/JobsHomesMap_data_test.csv")) %>%
     drop_na() %>%
-    mutate(jobs_homes_diff = Occupied.homes - Jobs) %>%
+    mutate(jobs_homes_diff = `Occupied homes` - Jobs) %>%
     group_by(County) %>%
     summarise(jobs_homes_diff = sum(jobs_homes_diff)) %>%
     mutate(County = str_trim(str_remove(County, "County")))
