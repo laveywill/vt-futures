@@ -5,45 +5,45 @@ plot_lf_county <- function(labor_force_df, county) {
   
   county_full <- paste0(tools::toTitleCase(county), " County, Vermont")
   
-  county_data <- df %>% 
+  county_data <- labor_force_df %>% 
     filter(NAME == county_full)
   
   # Prepare data
   county_data_long <- county_data %>%
-    mutate(`Non Labor Force Count` = Count - `Labor Force Count`) %>%
+    mutate(non_labor_force_count = count - labor_force_count) %>%
     pivot_longer(
-      cols = c(`Labor Force Count`, `Non Labor Force Count`),
+      cols = c(labor_force_count, non_labor_force_count),
       names_to = "Population_Type",
       values_to = "Population"
     ) %>%
     mutate(
       Population_Type = factor(
         Population_Type, 
-        levels = c("Labor Force Count", "Non Labor Force Count")
+        levels = c("labor_force_count", "non_labor_force_count")
       ),
-      `Age Groups` = gsub("_", " ", `Age Groups`)
+      age_group = gsub("_", " ", age_group)
     )
   
   county_data_long <- county_data_long %>%
-    mutate(age_lower = as.numeric(str_extract(`Age Groups`, "^[0-9]+"))) %>%
-    mutate(`Age Groups` = factor(
-      `Age Groups`, 
-      levels = unique(`Age Groups`[order(age_lower)])
+    mutate(age_lower = as.numeric(str_extract(age_group, "^[0-9]+"))) %>%
+    mutate(age_group = factor(
+      age_group, 
+      levels = unique(age_group[order(age_lower)])
     ))
   
   county_data_long <- county_data_long %>%
-    group_by(`Age Groups`) %>%
+    group_by(age_group) %>%
     mutate(total_population = sum(Population)) %>%
     ungroup() %>%
     mutate(labor_percent = ifelse(
-      Population_Type == "Labor Force Count",
+      Population_Type == "labor_force_count",
       Population / total_population * 100, 
       NA
     ))
   
   
   county_data_long <- county_data_long %>%
-    mutate(is_prime = str_detect(`Age Groups`, "25 to 34|35 to 44|45 to 54"))
+    mutate(is_prime = str_detect(age_group, "25 to 34|35 to 44|45 to 54"))
   
   
   county_data_long <- county_data_long %>%
@@ -52,7 +52,7 @@ plot_lf_county <- function(labor_force_df, county) {
                                  as.character(Population_Type)))
   
   max_population <- county_data_long %>%
-    group_by(`Age Groups`) %>%
+    group_by(age_group) %>%
     summarise(total_population = sum(Population)) %>%
     summarise(max_total = max(total_population)) %>%
     pull(max_total)
@@ -60,7 +60,7 @@ plot_lf_county <- function(labor_force_df, county) {
   upper_limit <- max_population * 1.1
   
   
-  p <- ggplot(county_data_long, aes(x = `Age Groups`, y = Population, fill = fill_factor)) +
+  p <- ggplot(county_data_long, aes(x = age_group, y = Population, fill = fill_factor)) +
     geom_bar(
       stat = "identity", 
       position = position_stack(reverse = TRUE), 
@@ -68,7 +68,7 @@ plot_lf_county <- function(labor_force_df, county) {
     ) +
     
     geom_text(
-      data = filter(county_data_long, Population_Type == "Labor Force Count"),
+      data = filter(county_data_long, Population_Type == "labor_force_count"),
       aes(label = paste0(round(labor_percent, 1), "%")),
       position = position_stack(vjust = 0.5, reverse = TRUE),
       color = "white", 
@@ -85,8 +85,8 @@ plot_lf_county <- function(labor_force_df, county) {
     
     scale_fill_manual(
       name = "Population Type",
-      breaks = c("Labor Force Count", "prime_Labor Force Count", "Non Labor Force Count"),
-      values = c("Labor Force Count" = "#225ea8", 
+      breaks = c("labor_force_count", "prime_Labor Force Count", "non_labor_force_count"),
+      values = c("labor_force_count" = "#225ea8", 
                  "Non Labor Force Count" = "#41b6c4",
                  "prime_Labor Force Count" = "#08306b", 
                  "prime_Non Labor Force Count" = "#41b6c4"),
