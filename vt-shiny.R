@@ -1,21 +1,29 @@
+
 library(shiny)
 library(leaflet)
 library(sf)
 library(tidyverse)
 library(tigris)
 library(censusapi)
+library(tidycensus)
 library(bslib)
-library(DT)
+library(scales)
+library(readxl)
 
 pth <- getwd()
+source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
-#source(paste0(pth, "/jobs.R"))
-#source(paste0(pth, "/homes.R"))
+source(paste0(pth, "/jobs.R"))
+source(paste0(pth, "/homes.R"))
 
+#### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+year <- 2023
+state_fips <- 50
 
 #### Read in data ####
-census_data <- census_data(2023)
+census_data <- census_data(year)
+census_variables <- get_census_variables()
 state <- census_data$state
 county <- census_data$county
 town <- census_data$place
@@ -38,7 +46,6 @@ ui <- page_fluid(
   p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
   
   navset_card_pill(
-    # Population tab is an example layout of what we want
     nav_panel("Population",
       layout_column_wrap(  
         width = 1,
@@ -164,17 +171,7 @@ server <- function(input, output, session) {
   })
   
   output$pop <- renderPlot({
-    vt_map |>
-      ggplot() +
-      geom_sf(aes(fill = !!as.symbol(input$pop_county_col))) + 
-      geom_sf_label(aes(label = !!as.symbol(input$pop_county_col))) +
-      geom_sf_label(aes(label = NAME), nudge_y = -0.1) + 
-      scale_fill_gradient(
-        low = "honeydew", 
-        high = "darkgreen", 
-        name = input$pop_county_col
-      ) +
-      theme_void()
+    plot_county_map(vt_map, input$pop_county_col)
   })
   
   output$age_plot <- renderPlot({

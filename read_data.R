@@ -1,8 +1,7 @@
-## FUNTION TO READ IN CENSUS DATA AND RETURN ALL NECESSARY DFS ##
 
-census_data <- function(year) {
-  Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
-  
+## FUNCTION TO READ IN CENSUS DATA AND RETURN ALL NECESSARY DFS ##
+
+get_census_variables <- function() {
   census_variables <- data.frame(
     code = c(
       "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
@@ -28,6 +27,13 @@ census_data <- function(year) {
     stringsAsFactors = FALSE
   )
   
+  return(census_variables)
+}
+
+census_data <- function(year) {
+  
+  census_variables <- get_census_variables()
+
   # Pull df at the state level
   state_census_data_raw <- getCensus(
     name = "acs/acs5",
@@ -36,7 +42,7 @@ census_data <- function(year) {
     region = "state:50",
   )
   
-  state_census_data <- census_data_raw |> 
+  state_census_data <- state_census_data_raw |> 
     rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
   
   # Pull df at the county level
@@ -85,7 +91,7 @@ build_state_age_df <- function(df) {
   # Filter for state level age demographic data
   age <- df %>%
     select(starts_with("B01001_"))  %>%
-    summarise(across(everything(), sum, na.rm = TRUE))
+    summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
   
   age_long <- as.data.frame(t(age))
   colnames(age_long) <- "population"
@@ -135,6 +141,7 @@ county_level_map <- function(df){
 }
 
 ## FUNCTION TO CREATE COUNTY CAPACITIES DATAFRAME ##
+## 
 build_county_caps_df <- function() {
   pop <- getCensus(
     name = "acs/acs5",
@@ -152,13 +159,13 @@ build_county_caps_df <- function() {
     ) %>% select(County, pop_goal)
   
   latent_cap <- 
-    read_csv(paste0(pth, "/latent-capacity.csv")) %>%
+    read_csv(paste0(pth, "/data/latent-capacity.csv"), show_col_types = F) %>%
     rename(latent_cap = `Latent Capacity`) %>%
     group_by(County) %>%
     summarise(latent_cap = sum(latent_cap))
   
   jobs_homes <- 
-    read.csv(paste0(pth, "/JobsHomesMap_data.csv"), sep = "\t", fileEncoding = "UTF-16") %>%
+    read_csv(paste0(pth, "/data/JobsHomesMap_data_formatted.csv"), name_repair = make.names) %>%
     drop_na() %>%
     mutate(jobs_homes_diff = Occupied.homes - Jobs) %>%
     group_by(County) %>%
@@ -166,7 +173,7 @@ build_county_caps_df <- function() {
     mutate(County = str_trim(str_remove(County, "County")))
   
   school_latency <- 
-    read_excel(paste0(pth, "/school_latency.xlsx"), sheet = "Data")  %>%
+    read_excel(paste0(pth, "/data/school_latency.xlsx"), sheet = "Data")  %>%
     rename(latent_cap = `Latent Capacity`) %>%
     drop_na() %>%
     group_by(County) %>%
