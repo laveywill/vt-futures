@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+pth <- getwd()
+source(paste0(pth, "/read_data.R"))
+>>>>>>> refs/remotes/origin/main
 
 # STATE LEVEL POPULATION DATA
 
