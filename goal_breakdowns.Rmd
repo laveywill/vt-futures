@@ -338,9 +338,9 @@ jobs_homes <- read.csv("JobsHomesMap_data.csv", sep = "\t", fileEncoding = "UTF-
 
 jobs_homes <- jobs_homes %>%
   drop_na() %>%
-  mutate(jobs_homes_diff = Occupied.homes - Jobs) %>%
+  rename(jobs_homes_index = Jobs.Homes.Index) %>%
   group_by(County) %>%
-  summarise(jobs_homes_diff = sum(jobs_homes_diff)) %>%
+  summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
   mutate(County = str_trim(str_remove(County, "County")))
 jobs_homes
 ```

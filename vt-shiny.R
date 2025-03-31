@@ -6,7 +6,7 @@ library(tigris)
 library(censusapi)
 library(bslib)
 library(DT)
-
+library(readxl)
 pth <- getwd()
 source(paste0(pth, "/population.R"))
 #source(paste0(pth, "/jobs.R"))
@@ -109,7 +109,8 @@ ui <- page_fluid(
                 p("It might make sense to add some more description here
            of the different capacity metrics.")
               ),
-                plotOutput("county_plot", height = "600px")
+                plotOutput("county_plot", height = "600px"),
+                plotOutput("jobs_homes_gauge", height = "100px")
             )
           )
         ),
@@ -128,7 +129,7 @@ ui <- page_fluid(
               ),
               mainPanel(
                 p("placeholder plot")
-                # plotOutput("job_plot", height = "600px")
+                # plotOutput("job_plot", height = "1000px")
               )
             )
           )
@@ -160,7 +161,8 @@ server <- function(input, output, session) {
   filtered_data <- reactive({
     county_caps_df() %>%
       filter(County == input$selected_county) %>%
-      pivot_longer(cols = -County, names_to = "Metric", values_to = "Value")
+      pivot_longer(cols = c("pop_goal", "latent_cap", "latent_cap_school"),
+                   names_to = "Metric", values_to = "Value")
   })
   
   output$pop <- renderPlot({
@@ -183,7 +185,7 @@ server <- function(input, output, session) {
   
   output$county_plot <- renderPlot({
     ggplot(filtered_data() %>% 
-             mutate(Metric = factor(Metric, levels = c("pop_goal", "latent_cap", "jobs_homes_diff", "latent_cap_school"))),
+             mutate(Metric = factor(Metric, levels = c("pop_goal", "latent_cap", "latent_cap_school"))),
            aes(x = Metric, y = Value, fill = Metric)) +
       geom_bar(stat = "identity", position = "dodge") +
       labs(title = paste("County Capacity Limitations:", input$selected_county, "\n"), 
@@ -191,13 +193,11 @@ server <- function(input, output, session) {
       theme_minimal() +
       scale_x_discrete(labels = c(
         "latent_cap" = "Latent Capacity",
-        "jobs_homes_diff" = "Jobs-Homes Difference",
         "latent_cap_school" = "School Latency",
         "pop_goal" = "Population Goal"
       )) + 
       scale_fill_manual(values = c(
         "latent_cap" = "deepskyblue1",
-        "jobs_homes_diff" = "orange",
         "latent_cap_school" = "red",
         "pop_goal" = "aquamarine4"
       )) +
@@ -211,6 +211,39 @@ server <- function(input, output, session) {
             plot.title = element_text(size = 22, face = "bold"))
   })
   
+  output$jobs_homes_gauge <- renderPlot({
+    data <- county_caps_df() %>%
+      filter(County == input$selected_county)
+    
+    if (nrow(data) == 0 || is.na(data$jobs_homes_index)) return(NULL)
+    
+    val <- round(data$jobs_homes_index, 2)
+    gradient_data <- data.frame(x = seq(0, 2, length.out = 200))
+    
+    ggplot() +
+      geom_tile(data = gradient_data, aes(x = x, y = 1, fill = x), height = 0.3) +
+      
+      geom_segment(aes(x = val, xend = val, y = 0.85, yend = 1.15), 
+                   color = "black", size = 1.5) +
+      
+      annotate("text", x = val, y = 1.3, label = paste(input$selected_county, ":", val),
+               size = 4.5, fontface = "bold", hjust = 0.5, family = "Georgia") +
+      annotate("text", x = 0, y = 0.8, label = "0 (More homes)", hjust = 0, size = 5, family = "Georgia") +
+      annotate("text", x = 1, y = 0.8, label = "1 (Balanced)", hjust = 0.5, size = 5, family = "Georgia") +
+      annotate("text", x = 2, y = 0.8, label = "2 (More jobs)", hjust = 1, size = 5, family = "Georgia") +
+      
+      scale_fill_gradient(low = "lightgreen", high = "orange") +
+      
+      scale_x_continuous(limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2)) +
+      coord_cartesian(clip = "off") +
+      labs(title = "Jobs-Homes Index\n") +
+      theme_void() +
+      theme(
+        plot.title = element_text(size = 20, face = "bold", family = "Georgia"),
+        legend.position = "none",
+        plot.margin = margin(5, 10, 5, 10)
+      )
+  })
 
 }
 
