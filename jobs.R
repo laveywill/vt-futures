@@ -85,11 +85,11 @@ plot_lf_county <- function(labor_force_df, county) {
     
     scale_fill_manual(
       name = "Population Type",
-      breaks = c("labor_force_count", "prime_Labor Force Count", "non_labor_force_count"),
+      breaks = c("labor_force_count", "prime_labor_force_count", "non_labor_force_count"),
       values = c("labor_force_count" = "#225ea8", 
-                 "Non Labor Force Count" = "#41b6c4",
-                 "prime_Labor Force Count" = "#08306b", 
-                 "prime_Non Labor Force Count" = "#41b6c4"),
+                 "non_labor_force_count" = "#41b6c4",
+                 "prime_labor_force_count" = "#08306b", 
+                 "prime_non_labor_force_count" = "#41b6c4"),
       labels = c("Labor Force", "Labor Force (Prime Age)", "Not in Labor Force")
     ) +
     scale_y_continuous(
