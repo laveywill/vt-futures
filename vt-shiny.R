@@ -7,14 +7,11 @@ library(tigris)
 library(censusapi)
 library(tidycensus)
 library(bslib)
-<<<<<<< HEAD
 library(scales)
 library(readxl)
-
-=======
 library(DT)
 library(readxl)
->>>>>>> refs/remotes/origin/main
+
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))

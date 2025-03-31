@@ -34,7 +34,8 @@ census_data <- function(year) {
   
   census_variables <- get_census_variables()
 
-=======
+}
+
 census_variables <- data.frame(
   code = c(
     "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
@@ -63,7 +64,6 @@ census_variables <- data.frame(
 census_data <- function(year) {
   Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
   
->>>>>>> refs/remotes/origin/main
   # Pull df at the state level
   state_census_data_raw <- getCensus(
     name = "acs/acs5",
