@@ -57,7 +57,7 @@ get_housing_units_data <- function(year) {
 
 plot_state_housing_units <- function(state_df) {
   
-  p <- state |> 
+  p <- state_df |> 
     ggplot() + 
     geom_bar(aes(x = Year_Built, y = Count), fill="steelblue", stat = "identity") +
     theme_minimal() +

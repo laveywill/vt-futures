@@ -101,7 +101,7 @@ ui <- page_fluid(
                 , width = "150px"
               ),
             ),
-            plotOutput("pop")
+            plotOutput("pop_county")
           )
         ),
         card(
@@ -147,9 +147,31 @@ ui <- page_fluid(
               ),
               mainPanel(
                 p("Estimated Housing Units by Year Structure Built"),
-                plotOutput("job_plot", height = "600px")
+                plotOutput("home_plot", height = "600px")
               )
             )
+          )
+        ),
+        card(
+          card_header(class = "bg-primary", "County Level Exploration"),
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              selectInput("home_county_col", 
+                          label = "Select a Variable to Explore",
+                          choices = census_variables$title),
+              sidebarPanel(
+                strong("National Benchmarks"),
+                p("\n"),
+                p("Average capita income: $37,683"),
+                p("Median age: 38.7"), 
+                p("Poverty Rate: 11.1%"), 
+                p("Median home value: $420,000"), 
+                p("Average labor force participation rate: 62%"),
+                , width = "150px"
+              ),
+            ),
+            plotOutput("home_county")
           )
         )
       )
@@ -183,8 +205,12 @@ server <- function(input, output, session) {
                    names_to = "Metric", values_to = "Value")
   })
   
-  output$pop <- renderPlot({
+  output$pop_county <- renderPlot({
     plot_county_map(vt_map, input$pop_county_col)
+  })
+  
+  output$home_county <- renderPlot({
+    plot_county_map(vt_map, input$home_county_col)
   })
   
   output$age_plot <- renderPlot({
@@ -253,7 +279,7 @@ server <- function(input, output, session) {
       )
   })
   
-  output$job_plot <- renderPlot({
+  output$home_plot <- renderPlot({
     plot_state_housing_units(state_housing_data)
   })
 
