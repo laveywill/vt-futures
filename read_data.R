@@ -152,13 +152,13 @@ build_county_caps_df <- function() {
     ) %>% select(County, pop_goal)
   
   latent_cap <- 
-    read_csv(paste0(pth, "/latent-capacity.csv")) %>%
+    read_csv(paste0(pth, "/data/latent-capacity.csv")) %>%
     rename(latent_cap = `Latent Capacity`) %>%
     group_by(County) %>%
     summarise(latent_cap = sum(latent_cap))
   
   jobs_homes <- 
-    read.csv(paste0(pth, "/JobsHomesMap_data.csv"), sep = "\t", fileEncoding = "UTF-16") %>%
+    read.csv(paste0(pth, "/data/JobsHomesMap_data.csv"), sep = "\t", fileEncoding = "UTF-16") %>%
     drop_na() %>%
     rename(jobs_homes_index = Jobs.Homes.Index) %>%
     group_by(County) %>%
@@ -166,7 +166,7 @@ build_county_caps_df <- function() {
     mutate(County = str_trim(str_remove(County, "County")))
   
   school_latency <- 
-    read_excel(paste0(pth, "/school_latency.xlsx"), sheet = "Data")  %>%
+    read_excel(paste0(pth, "/data/school_latency.xlsx"), sheet = "Data")  %>%
     rename(latent_cap = `Latent Capacity`) %>%
     drop_na() %>%
     group_by(County) %>%
