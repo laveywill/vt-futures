@@ -1,5 +1,7 @@
+
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
+
 
 # STATE LEVEL POPULATION DATA
 
@@ -38,4 +40,20 @@ plot_age_distribution <- function(df) {
           axis.text.x = element_text(size = 14, face = "bold"),
           axis.text.y = element_text(size = 14, face = "bold"),
           plot.title = element_text(size = 22, face = "bold"))
+}
+
+plot_county_map <- function(df, county_col) {
+  map <- df |>
+    ggplot() +
+    geom_sf(aes(fill = !!as.symbol(county_col))) + 
+    geom_sf_label(aes(label = !!as.symbol(county_col)), parse = T) +
+    geom_sf_label(aes(label = NAME), nudge_y = -0.1) + 
+    scale_fill_gradient(
+      low = "honeydew", 
+      high = "darkgreen",
+      name = county_col
+    ) +
+    theme_void()
+  
+  return(map)
 }

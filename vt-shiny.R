@@ -1,24 +1,38 @@
+
 library(shiny)
 library(leaflet)
 library(sf)
 library(tidyverse)
 library(tigris)
 library(censusapi)
+library(tidycensus)
 library(bslib)
+library(scales)
+library(readxl)
 library(DT)
 library(readxl)
-pth <- getwd()
-source(paste0(pth, "/population.R"))
-#source(paste0(pth, "/jobs.R"))
-#source(paste0(pth, "/homes.R"))
 
+pth <- getwd()
+source(paste0(pth, "/read_data.R"))
+source(paste0(pth, "/population.R"))
+source(paste0(pth, "/jobs.R"))
+source(paste0(pth, "/homes.R"))
+
+#### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+year <- 2023
+state_fips <- 50
 
 #### Read in data ####
-census_data <- census_data(2023)
+census_data <- census_data(year)
+census_variables <- get_census_variables()
 state <- census_data$state
 county <- census_data$county
 town <- census_data$place
+
+housing <- get_housing_units_data(year)
+state_housing_data <- housing$state
+county_housing_data <- housing$county
 
 state_age_data <- build_state_age_df(state)
 vt_map <- county_level_map(county)
@@ -38,7 +52,6 @@ ui <- page_fluid(
   p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
   
   navset_card_pill(
-    # Population tab is an example layout of what we want
     nav_panel("Population",
       layout_column_wrap(  
         width = 1,
@@ -117,19 +130,24 @@ ui <- page_fluid(
       )
     ),
  
-    nav_panel("Jobs",
+    nav_panel("Homes",
       layout_column_wrap(
         width = 1,
         card(
-          card_header(class = "bg-primary", "State Jobs"),
+          card_header(class = "bg-primary", "State Homes"),
           card_body(
             sidebarLayout(
               sidebarPanel(
-                p("placeholder text")
+                p("Vermont has some of the oldest housing stock in the country. 
+                  A quarter of homes were built before 1940. 
+                  Rates of housing construction were healthy in the 1970s and 
+                  1980s relative to the needs of the population at the time. 
+                  Vermont's current housing shortage is the result of decades of 
+                  decelerating housing construction.")
               ),
               mainPanel(
-                p("placeholder plot")
-                # plotOutput("job_plot", height = "1000px")
+                p("Estimated Housing Units by Year Structure Built"),
+                plotOutput("job_plot", height = "600px")
               )
             )
           )
@@ -137,7 +155,7 @@ ui <- page_fluid(
       )
     ),
     
-    nav_panel("Homes", p("Homes data at the state level."), tableOutput("homes")),
+    nav_panel("Jobs", p("Jobs data at the state level."), tableOutput("jobs")),
     
     nav_panel("Etc...", p("Etc..."), tableOutput("etc"))
     
@@ -166,17 +184,7 @@ server <- function(input, output, session) {
   })
   
   output$pop <- renderPlot({
-    vt_map |>
-      ggplot() +
-      geom_sf(aes(fill = !!as.symbol(input$pop_county_col))) + 
-      geom_sf_label(aes(label = !!as.symbol(input$pop_county_col))) +
-      geom_sf_label(aes(label = NAME), nudge_y = -0.1) + 
-      scale_fill_gradient(
-        low = "honeydew", 
-        high = "darkgreen", 
-        name = input$pop_county_col
-      ) +
-      theme_void()
+    plot_county_map(vt_map, input$pop_county_col)
   })
   
   output$age_plot <- renderPlot({
@@ -243,6 +251,10 @@ server <- function(input, output, session) {
         legend.position = "none",
         plot.margin = margin(5, 10, 5, 10)
       )
+  })
+  
+  output$job_plot <- renderPlot({
+    plot_state_housing_units(state_housing_data)
   })
 
 }
