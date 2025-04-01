@@ -30,6 +30,10 @@ state <- census_data$state
 county <- census_data$county
 town <- census_data$place
 
+housing <- get_housing_units_data(year)
+state_housing_data <- housing$state
+county_housing_data <- housing$county
+
 state_age_data <- build_state_age_df(state)
 vt_map <- county_level_map(county)
 
@@ -126,19 +130,24 @@ ui <- page_fluid(
       )
     ),
  
-    nav_panel("Jobs",
+    nav_panel("Homes",
       layout_column_wrap(
         width = 1,
         card(
-          card_header(class = "bg-primary", "State Jobs"),
+          card_header(class = "bg-primary", "State Homes"),
           card_body(
             sidebarLayout(
               sidebarPanel(
-                p("placeholder text")
+                p("Vermont has some of the oldest housing stock in the country. 
+                  A quarter of homes were built before 1940. 
+                  Rates of housing construction were healthy in the 1970s and 
+                  1980s relative to the needs of the population at the time. 
+                  Vermont's current housing shortage is the result of decades of 
+                  decelerating housing construction.")
               ),
               mainPanel(
-                p("placeholder plot")
-                # plotOutput("job_plot", height = "1000px")
+                p("Estimated Housing Units by Year Structure Built"),
+                plotOutput("job_plot", height = "600px")
               )
             )
           )
@@ -146,7 +155,7 @@ ui <- page_fluid(
       )
     ),
     
-    nav_panel("Homes", p("Homes data at the state level."), tableOutput("homes")),
+    nav_panel("Jobs", p("Jobs data at the state level."), tableOutput("jobs")),
     
     nav_panel("Etc...", p("Etc..."), tableOutput("etc"))
     
@@ -242,6 +251,10 @@ server <- function(input, output, session) {
         legend.position = "none",
         plot.margin = margin(5, 10, 5, 10)
       )
+  })
+  
+  output$job_plot <- renderPlot({
+    plot_state_housing_units(state_housing_data)
   })
 
 }
