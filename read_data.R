@@ -25,8 +25,7 @@ get_census_variables <- function() {
       "Population with Private Health Insurance", "Population with No Health Insurance"
     ),
     stringsAsFactors = FALSE
-  )
-  
+  ) 
   return(census_variables)
 }
 
@@ -158,14 +157,15 @@ build_state_age_df <- function(df) {
   state_age_summary <- age_long %>%
     group_by(age_group) %>%
     summarise(total_population = sum(population, na.rm = TRUE)) %>%
-    filter(!is.na(age_group))  # Remove any unmatched rows
+    filter(!is.na(age_group)) 
   return(state_age_summary)
 }
 
 ## BUILD DF FOR COUNTY MAP ##
 
 county_level_map <- function(df){
-  vt_counties <- counties(state = "VT", cb = TRUE, class = "sf", year = "2022")
+  counties_all <- st_read("data/cb_2022_us_county_500k.shp")
+  vt_counties <- counties_all[counties_all$STATEFP == "50", ]
   vt_map <- left_join(vt_counties, df, by = "NAME")
   return(vt_map)
 }
@@ -203,11 +203,11 @@ build_county_caps_df <- function() {
     mutate(County = str_trim(str_remove(County, "County")))
   
   school_latency <- 
-    read_excel(paste0(pth, "/data/school_latency.xlsx"), sheet = "Data")  %>%
-    rename(latent_cap = `Latent Capacity`) %>%
-    drop_na() %>%
+    read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
+    mutate(latent_cap_school = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
+    distinct(County, school_district, latent_cap_school) %>% 
     group_by(County) %>%
-    summarise(latent_cap_school = sum(latent_cap))   
+    summarise(latent_cap_school = sum(latent_cap_school))  
   
   # Merge all datasets
   county_caps <- 

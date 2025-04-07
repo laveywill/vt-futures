@@ -11,6 +11,7 @@ library(scales)
 library(readxl)
 library(DT)
 library(readxl)
+library(shinydashboard)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -87,21 +88,27 @@ ui <- page_fluid(
           layout_sidebar(
             sidebar = sidebar(
               bg = "lightgrey",
-              selectInput("pop_county_col", 
-                          label = "Select a Variable to Explore",
-                          choices = census_variables$title),
-              sidebarPanel(
-                strong("National Benchmarks"),
-                p("\n"),
-                p("Average capita income: $37,683"),
-                p("Median age: 38.7"), 
-                p("Poverty Rate: 11.1%"), 
-                p("Median home value: $420,000"), 
-                p("Average labor force participation rate: 62%"),
-                , width = "150px"
-              ),
+              selectInput(
+                "pop_county_col", 
+                label = "Select a Variable to Explore",
+                choices = census_variables$title
+              )
             ),
-            plotOutput("pop_county")
+            layout_columns(
+              col_widths = c(7, 5), 
+              plotOutput("pop_county", height = "400px"),
+              card(
+                class = "bg-light p-3 shadow-sm",
+                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+                div(class = "mb-2", strong("Median age:"), "38.7"),
+                div(class = "mb-2", strong("Male population:"), "49.5"),
+                div(class = "mb-2", strong("Female population:"), "50.5"),
+                div(class = "mb-2", strong("White population:"), "61%"),
+                div(class = "mb-2", strong("Black or African American population:"), "14%"),
+                div(class = "mb-2", strong("Asian population:"), "7%"),
+                div(class = "mb-2", strong("Hispanic or Latino population:"), "19%")
+              )
+            )
           )
         ),
         card(
@@ -119,11 +126,31 @@ ui <- page_fluid(
                 p("Here, we can see the population goal for each county compared
            with its current capacities for adding new population
            in different areas."),
-                p("It might make sense to add some more description here
-           of the different capacity metrics.")
+                strong("Latent capacity:"),
+                p("The difference between the current population and the 
+                  maximum population that the county has supported historically"),
+                strong("School latency:"),
+                p("The difference between the current school enrollment and the 
+                  enrollment if the student-teacher ratio was increased to 18:1")
               ),
                 plotOutput("county_plot", height = "600px"),
-                plotOutput("jobs_homes_gauge", height = "100px")
+                plotOutput("jobs_homes_gauge", height = "100px"),
+              p("The jobs-homes index is a measure of the ratio of jobs
+                to homes in a county. Counties that have a ratio less than 
+                1 have more homes than jobs. This usually means that most people
+                who work in the county are able to find housing there, and some
+                people commute outside of the county for work. Counties with a ratio
+                very close to 0 are known as `bedroom communities` because most
+                of the residents of the county do not work there -- there are many more
+                homes than jobs. On the other
+                hand, counties with a ratio greater than 1 have more jobs than
+                homes. Most workers have to commute into the county because 
+                there is not enough housing for everyone who works in the county.
+                This ratio can help us understand which counties are able to support
+                 an influx of population, and where counties can focus on development
+                to help support a population increase. For example, bedroom 
+                communities may want to work on adding jobs, while counties with
+                more jobs than housing would want to prioritize building housing.")
             )
           )
         ),
@@ -218,65 +245,11 @@ server <- function(input, output, session) {
   })
   
   output$county_plot <- renderPlot({
-    ggplot(filtered_data() %>% 
-             mutate(Metric = factor(Metric, levels = c("pop_goal", "latent_cap", "latent_cap_school"))),
-           aes(x = Metric, y = Value, fill = Metric)) +
-      geom_bar(stat = "identity", position = "dodge") +
-      labs(title = paste("County Capacity Limitations:", input$selected_county, "\n"), 
-           x = "\nMetric", y = "Value") +
-      theme_minimal() +
-      scale_x_discrete(labels = c(
-        "latent_cap" = "Latent Capacity",
-        "latent_cap_school" = "School Latency",
-        "pop_goal" = "Population Goal"
-      )) + 
-      scale_fill_manual(values = c(
-        "latent_cap" = "deepskyblue1",
-        "latent_cap_school" = "red",
-        "pop_goal" = "aquamarine4"
-      )) +
-      theme(legend.position = "none", 
-            text = element_text(family = "Georgia"),
-            plot.margin = margin(t = 10, r = 10, b = 40, l = 10),
-            axis.title.x = element_text(size = 16, face = "bold"),
-            axis.title.y = element_text(size = 16, face = "bold"),
-            axis.text.x = element_text(size = 14, face = "bold"),
-            axis.text.y = element_text(size = 14, face = "bold"),
-            plot.title = element_text(size = 22, face = "bold"))
+    plot_county_capacities(filtered_data(), county = input$selected_county)
   })
   
   output$jobs_homes_gauge <- renderPlot({
-    data <- county_caps_df() %>%
-      filter(County == input$selected_county)
-    
-    if (nrow(data) == 0 || is.na(data$jobs_homes_index)) return(NULL)
-    
-    val <- round(data$jobs_homes_index, 2)
-    gradient_data <- data.frame(x = seq(0, 2, length.out = 200))
-    
-    ggplot() +
-      geom_tile(data = gradient_data, aes(x = x, y = 1, fill = x), height = 0.3) +
-      
-      geom_segment(aes(x = val, xend = val, y = 0.85, yend = 1.15), 
-                   color = "black", size = 1.5) +
-      
-      annotate("text", x = val, y = 1.3, label = paste(input$selected_county, ":", val),
-               size = 4.5, fontface = "bold", hjust = 0.5, family = "Georgia") +
-      annotate("text", x = 0, y = 0.8, label = "0 (More homes)", hjust = 0, size = 5, family = "Georgia") +
-      annotate("text", x = 1, y = 0.8, label = "1 (Balanced)", hjust = 0.5, size = 5, family = "Georgia") +
-      annotate("text", x = 2, y = 0.8, label = "2 (More jobs)", hjust = 1, size = 5, family = "Georgia") +
-      
-      scale_fill_gradient(low = "lightgreen", high = "orange") +
-      
-      scale_x_continuous(limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2)) +
-      coord_cartesian(clip = "off") +
-      labs(title = "Jobs-Homes Index\n") +
-      theme_void() +
-      theme(
-        plot.title = element_text(size = 20, face = "bold", family = "Georgia"),
-        legend.position = "none",
-        plot.margin = margin(5, 10, 5, 10)
-      )
+    jobs_homes_index_scale(county_caps_df(), county = input$selected_county)
   })
   
   output$home_plot <- renderPlot({

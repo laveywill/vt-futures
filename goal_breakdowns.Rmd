@@ -391,3 +391,35 @@ vt_pop <- sum(pop$B01001_001E)
            ) %>% select(County, pop_goal)
    head(pop)
 ```
+
+
+```{r}
+## using 18:1
+library(readxl)
+pth <- getwd()
+school <- read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
+  mutate(latency = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
+  distinct(County, school_district, latency) %>% 
+  group_by(County) %>%
+  summarise(latency = sum(latency)) 
+head(school, 40)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
