@@ -35,6 +35,10 @@ housing <- get_housing_units_data(year)
 state_housing_data <- housing$state
 county_housing_data <- housing$county
 
+labor_force_df <- get_lf_data()
+prime_age_df <- get_prime_age_data(labor_force_df)
+dependency_df <- get_dependency_data(labor_force_df)
+
 state_age_data <- build_state_age_df(state)
 vt_map <- county_level_map(county)
 
@@ -195,7 +199,7 @@ ui <- page_fluid(
                 p("Poverty Rate: 11.1%"), 
                 p("Median home value: $420,000"), 
                 p("Average labor force participation rate: 62%"),
-                , width = "150px"
+                width = "150px"
               ),
             ),
             plotOutput("home_county")
@@ -204,9 +208,50 @@ ui <- page_fluid(
       )
     ),
     
-    nav_panel("Jobs", p("Jobs data at the state level."), tableOutput("jobs")),
-    
-    nav_panel("Etc...", p("Etc..."), tableOutput("etc"))
+    nav_panel(
+      "Jobs",
+      layout_column_wrap(
+        width = 1,
+        card(
+          card_header(class = "bg-primary", "State Jobs"),
+          card_body(
+            sidebarLayout(
+              sidebarPanel(
+                p("Jobs Placeholder Text")
+              ),
+              mainPanel(
+                plotOutput("jobs_plot", height = "600px")
+              )
+            )
+          )
+        ),
+        card(
+          card_header(class = "bg-primary", "County Level Exploration"),
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              selectInput("job_county_col", 
+                          label = "Select a County to Explore",
+                          choices = county$NAME)
+            ),
+            plotOutput("jobs_county")
+          )
+        ),
+        card(
+          card_header(class = "bg-primary", "Dependency Ratio"),
+          card_body(
+            sidebarLayout(
+              sidebarPanel(
+                p("Dependency Ratio")
+              ),
+              mainPanel(
+                plotOutput("dependency_plot", height = "600px")
+              )
+            )
+          )
+        )
+      )
+    )
     
   )
 )
@@ -254,6 +299,18 @@ server <- function(input, output, session) {
   
   output$home_plot <- renderPlot({
     plot_state_housing_units(state_housing_data)
+  })
+  
+  output$jobs_plot <- renderPlot({
+    plot_prime_working_age(prime_age_df)
+  })
+  
+  output$jobs_county <- renderPlot({
+    plot_lf_county(labor_force_df, input$job_county_col)
+  })
+  
+  output$dependency_plot <- renderPlot({
+    plot_dependency_ratio(dependency_df)
   })
 
 }

@@ -49,7 +49,8 @@ plot_lf_county <- function(labor_force_df, county) {
   county_data_long <- county_data_long %>%
     mutate(fill_factor = if_else(is_prime, 
                                  paste0("prime_", Population_Type), 
-                                 as.character(Population_Type)))
+                                 as.character(Population_Type))) |> 
+    filter(!(age_group %in% c("age 0 to 14")))
   
   max_population <- county_data_long %>%
     group_by(age_group) %>%
@@ -58,6 +59,8 @@ plot_lf_county <- function(labor_force_df, county) {
     pull(max_total)
   
   upper_limit <- max_population * 1.1
+  
+  county_data_long$age_group <- factor(county_data_long$age_group, levels = rev(unique(county_data_long$age_group)))
   
   
   p <- ggplot(county_data_long, aes(x = age_group, y = Population, fill = fill_factor)) +
@@ -113,7 +116,7 @@ plot_lf_county <- function(labor_force_df, county) {
 }
 
 plot_prime_working_age <- function(prime_age_df) {
-  ggplot(prime_working_age_lfpr, aes(x = reorder(NAME, prime_labor_pr), y = prime_labor_pr, fill = prime_labor_pr)) +
+  ggplot(prime_age_df, aes(x = reorder(NAME, prime_labor_pr), y = prime_labor_pr, fill = prime_labor_pr)) +
     geom_col(width = 0.7) +
     geom_text(aes(label = sprintf("%.2f", prime_labor_pr)), 
               hjust = -0.1, 
@@ -124,7 +127,7 @@ plot_prime_working_age <- function(prime_age_df) {
          x = "County",
          y = "Labor Force Participation Rate (%)" ,
          caption = "Source: American Community Survey (ACS)")+
-    scale_fill_gradient(low = "steelblue", high = "darkred") +
+    scale_fill_gradient(high = "steelblue", low = "darkred") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
     scale_x_discrete(labels = function(x) sub(" County,.*", "", x)) +
     theme_minimal(base_size = 15) +
@@ -135,7 +138,7 @@ plot_prime_working_age <- function(prime_age_df) {
 }
 
 plot_dependency_ratio <- function(dependency_df, title = "Dependency Ratio by County") {
-  ggplot(data, aes(x = reorder(NAME, dependency_ratio), y = dependency_ratio, fill = dependency_ratio)) +
+  ggplot(dependency_df, aes(x = reorder(NAME, dependency_ratio), y = dependency_ratio, fill = dependency_ratio)) +
     geom_col(width = 0.7) +
     geom_text(aes(label = sprintf("%.2f", dependency_ratio)), 
               hjust = -0.1, 
@@ -288,7 +291,6 @@ get_lf_data <- function() {
   return(cleaned_age_distribution)
 }
 
-# takes the lf_data as input df
 get_prime_age_data <- function(labor_force_df) {
   df <- labor_force_df %>%
     filter(age_group== "age_25_to_34"|age_group == "age_35_to_44"|age_group == "age_45_to_54") %>% 
