@@ -12,6 +12,7 @@ library(readxl)
 library(DT)
 library(readxl)
 library(shinydashboard)
+library(rlang)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -105,8 +106,8 @@ ui <- page_fluid(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
                 div(class = "mb-2", strong("Median age:"), "38.7"),
-                div(class = "mb-2", strong("Male population:"), "49.5"),
-                div(class = "mb-2", strong("Female population:"), "50.5"),
+                div(class = "mb-2", strong("Male population:"), "49.5%"),
+                div(class = "mb-2", strong("Female population:"), "50.5%"),
                 div(class = "mb-2", strong("White population:"), "61%"),
                 div(class = "mb-2", strong("Black or African American population:"), "14%"),
                 div(class = "mb-2", strong("Asian population:"), "7%"),
@@ -185,6 +186,8 @@ ui <- page_fluid(
         ),
         card(
           card_header(class = "bg-primary", "County Level Exploration"),
+          # add in percentages for demographics
+          # add in toggle to see difference in county stats vs national average
           layout_sidebar(
             sidebar = sidebar(
               bg = "lightgrey",

@@ -102,17 +102,44 @@ jobs_homes_index_scale <- function(df, county) {
   
 }
 
+
 plot_county_map <- function(df, county_col) {
-  map <- df |>
-    ggplot() +
-    geom_sf(aes(fill = !!as.symbol(county_col))) + 
-    geom_sf_label(aes(label = !!as.symbol(county_col)), parse = T) +
-    geom_sf_label(aes(label = NAME), nudge_y = -0.1) + 
-    scale_fill_gradient(
+  percent_cols <- c(
+    "White Alone",
+    "Black or African American Alone",
+    "Asian Alone",
+    "Hispanic or Latino Population",
+    "Total Male Population", 
+    "Total Female Population"
+  )
+  
+  county_sym <- sym(county_col)
+  
+  if (county_col %in% percent_cols) {
+    df <- df %>%
+      mutate(percent_label = paste0(round(!!county_sym * 100, 2), "%"))
+    
+    label_aes <- aes(label = percent_label)
+    fill_scale <- scale_fill_gradient(
+      low = "honeydew", 
+      high = "darkgreen",
+      name = county_col,
+      labels = percent_format(accuracy = 0.01)
+    )
+  } else {
+    label_aes <- aes(label = !!county_sym)
+    fill_scale <- scale_fill_gradient(
       low = "honeydew", 
       high = "darkgreen",
       name = county_col
-    ) +
+    )
+  }
+  
+  map <- ggplot(df) +
+    geom_sf(aes(fill = !!county_sym)) +
+    geom_sf_label(label_aes) +
+    geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
+    fill_scale +
     theme_void()
   
   return(map)

@@ -81,12 +81,16 @@ census_data <- function(year) {
     vars = c("NAME", census_variables$code),
     region = "county:*",
     regionin = "state:50",
-  )
+  ) 
   
   county_census_data <- county_census_data_raw |> 
     rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
     mutate(
-      NAME = gsub(" County, Vermont", "", NAME)
+      NAME = gsub(" County, Vermont", "", NAME),
+      `White Alone` = `White Alone` / `Total Population`,
+      `Black or African American Alone` = `Black or African American Alone` / `Total Population`,
+      `Asian Alone` = `Asian Alone` / `Total Population`,
+      `Hispanic or Latino Population` = `Hispanic or Latino Population` / `Total Population`,
     )
   
   # Pull df at the town ("place") level
