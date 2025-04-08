@@ -9,8 +9,8 @@ library(data.table)
 library(censusapi)
 
 pth <- getwd()
-browser()
-source(paste0(pth, "/state_data_functions.R"))
+#browser()
+# source(paste0(pth, "/state_data_functions.R"))
 
 vt_age_groups_2023 <- age_distribution_data(2023)
 

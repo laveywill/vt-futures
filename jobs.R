@@ -134,7 +134,9 @@ plot_prime_working_age <- function(prime_age_df) {
     theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 19),
           axis.text.x = element_text(color = "black"),
           axis.text.y = element_text(color = "black"),
-          legend.position = "none")
+          legend.position = "none") + 
+    geom_hline(yintercept = 0.833, color = "black", linetype = "dashed", size = 1) +
+    annotate("text", x = 1, y = 0.84, label = "National Average", hjust = 0, vjust = 2, size = 4, fontface = "italic")
 }
 
 plot_dependency_ratio <- function(dependency_df, title = "Dependency Ratio by County") {
