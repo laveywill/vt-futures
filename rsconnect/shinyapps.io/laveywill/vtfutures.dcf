@@ -1,0 +1,13 @@
+name: vtfutures
+title: vtfutures
+username: laveywill
+account: laveywill
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14462321
+bundleId: 10078552
+url: https://laveywill.shinyapps.io/vtfutures/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: county_capacity_module.R|goal_breakdowns.Rmd|README.md|vt-shiny.R|old-scripts
