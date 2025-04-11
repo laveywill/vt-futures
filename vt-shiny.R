@@ -25,6 +25,11 @@ Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
 year <- 2023
 state_fips <- 50
 
+population_variables = c(
+  "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
+  "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population"
+)
+
 #### Read in data ####
 census_data <- census_data(year)
 census_variables <- get_census_variables()
@@ -96,8 +101,8 @@ ui <- page_fluid(
               selectInput(
                 "pop_county_col", 
                 label = "Select a Variable to Explore",
-                choices = census_variables$title
-              )
+                choices = population_variables
+              ),
             ),
             layout_columns(
               col_widths = c(7, 5), 
@@ -281,7 +286,8 @@ server <- function(input, output, session) {
   })
   
   output$pop_county <- renderPlot({
-    plot_county_map(vt_map, input$pop_county_col)
+    req(input$pop_county_col)
+    plot_county_map(df = vt_map, county_col = input$pop_county_col)
   })
   
   output$home_county <- renderPlot({

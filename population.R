@@ -102,8 +102,17 @@ jobs_homes_index_scale <- function(df, county) {
   
 }
 
+national_averages <- c(
+  "Median Age" = 38.7,
+  "Total Male Population" = 0.495,
+  "Total Female Population" = 0.505,
+  "White Alone" = 0.61,
+  "Black or African American Alone" = 0.14,
+  "Asian Alone" = 0.07,
+  "Hispanic or Latino Population" = 0.19
+)
 
-plot_county_map <- function(df, county_col) {
+plot_county_map <- function(df, county_col, show_diff = FALSE) {
   percent_cols <- c(
     "White Alone",
     "Black or African American Alone",
@@ -114,29 +123,23 @@ plot_county_map <- function(df, county_col) {
   )
   
   county_sym <- sym(county_col)
-  
-  if (county_col %in% percent_cols) {
+  is_percent <- as_string(county_sym) %in% percent_cols
+
     df <- df %>%
-      mutate(percent_label = paste0(round(!!county_sym * 100, 2), "%"))
+      mutate(value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym)
     
-    label_aes <- aes(label = percent_label)
+    label_aes <- aes(label = value_label)
+    fill_aes <- aes(fill = !!county_sym)
+    
     fill_scale <- scale_fill_gradient(
       low = "honeydew", 
       high = "darkgreen",
       name = county_col,
-      labels = percent_format(accuracy = 0.01)
+      labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
     )
-  } else {
-    label_aes <- aes(label = !!county_sym)
-    fill_scale <- scale_fill_gradient(
-      low = "honeydew", 
-      high = "darkgreen",
-      name = county_col
-    )
-  }
   
   map <- ggplot(df) +
-    geom_sf(aes(fill = !!county_sym)) +
+    geom_sf(fill_aes) +
     geom_sf_label(label_aes) +
     geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
     fill_scale +

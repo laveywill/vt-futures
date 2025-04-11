@@ -91,6 +91,8 @@ census_data <- function(year) {
       `Black or African American Alone` = `Black or African American Alone` / `Total Population`,
       `Asian Alone` = `Asian Alone` / `Total Population`,
       `Hispanic or Latino Population` = `Hispanic or Latino Population` / `Total Population`,
+      `Total Male Population` = `Total Male Population` / `Total Population`,
+      `Total Female Population` = `Total Female Population` / `Total Population`
     )
   
   # Pull df at the town ("place") level
