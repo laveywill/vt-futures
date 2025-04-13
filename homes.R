@@ -70,3 +70,36 @@ plot_state_housing_units <- function(state_df) {
     
   return(p)
 }
+
+plot_county_map_homes <- function(df, county_col) {
+  dollar_cols <- c(
+    "Median Home Value",
+    "Median Gross Rent"
+  )
+  
+  county_sym <- sym(county_col)
+  is_dollar <- as_string(county_sym) %in% dollar_cols
+  
+  df <- df %>%
+    mutate(value_label = if (is_dollar) dollar(!!county_sym) else !!county_sym)
+  
+  label_aes <- aes(label = value_label)
+  fill_aes <- aes(fill = !!county_sym)
+  
+  fill_scale <- scale_fill_gradient(
+    low = "honeydew", 
+    high = "darkgreen",
+    name = county_col,
+    labels = if (is_dollar) dollar else waiver()
+  )
+  
+  map <- ggplot(df) +
+    geom_sf(fill_aes) +
+    geom_sf_label(label_aes) +
+    geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
+    fill_scale +
+    theme_void()
+  
+  return(map)
+}
+

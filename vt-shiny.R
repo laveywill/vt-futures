@@ -30,6 +30,17 @@ population_variables = c(
   "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population"
 )
 
+homes_variables = c(
+  "Median Home Value", "Median Gross Rent", "Total Housing Units", "Occupied Housing Units", 
+  "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units"
+)
+
+jobs_variables = c(
+  "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+  "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
+  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
+)
+
 #### Read in data ####
 census_data <- census_data(year)
 census_variables <- get_census_variables()
@@ -62,6 +73,7 @@ ui <- page_fluid(
   titlePanel("Vermont Futures Project: Interactive Dashboard"),
   p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
   
+  ## POPULALTION PAGE ## 
   navset_card_pill(
     nav_panel("Population",
       layout_column_wrap(  
@@ -99,14 +111,14 @@ ui <- page_fluid(
             sidebar = sidebar(
               bg = "lightgrey",
               selectInput(
-                "pop_county_col", 
+                "pop_var_col", 
                 label = "Select a Variable to Explore",
                 choices = population_variables
               ),
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("pop_county", height = "400px"),
+              plotOutput("pop_county_map", height = "400px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -167,6 +179,8 @@ ui <- page_fluid(
       )
     ),
  
+ ## HOMES PAGE ## 
+    
     nav_panel("Homes",
       layout_column_wrap(
         width = 1,
@@ -191,31 +205,37 @@ ui <- page_fluid(
         ),
         card(
           card_header(class = "bg-primary", "County Level Exploration"),
-          # add in percentages for demographics
-          # add in toggle to see difference in county stats vs national average
           layout_sidebar(
             sidebar = sidebar(
               bg = "lightgrey",
-              selectInput("home_county_col", 
-                          label = "Select a Variable to Explore",
-                          choices = census_variables$title),
-              sidebarPanel(
-                strong("National Benchmarks"),
-                p("\n"),
-                p("Average capita income: $37,683"),
-                p("Median age: 38.7"), 
-                p("Poverty Rate: 11.1%"), 
-                p("Median home value: $420,000"), 
-                p("Average labor force participation rate: 62%"),
-                width = "150px"
+              selectInput(
+                "homes_var_col", 
+                label = "Select a Variable to Explore",
+                choices = homes_variables
               ),
             ),
-            plotOutput("home_county")
+            layout_columns(
+              col_widths = c(7, 5), 
+              plotOutput("homes_county_map", height = "400px"),
+              card(
+                class = "bg-light p-3 shadow-sm",
+                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+                div(class = "mb-2", strong("Median Home Value:"), "$X"),
+                div(class = "mb-2", strong("Median Gross Rent:"), "$X"),
+                div(class = "mb-2", strong("Total Housing Units:"), "X"),
+                div(class = "mb-2", strong("Occupied Housing Units:"), "X"),
+                div(class = "mb-2", strong("Vacant Housing Units:"), "X"),
+                div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "X"),
+                div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "X")
+              )
+            )
           )
-        )
+        ),
       )
     ),
     
+ ## JOBS PAGE ## 
+ 
     nav_panel(
       "Jobs",
       layout_column_wrap(
@@ -243,6 +263,40 @@ ui <- page_fluid(
                           choices = county$NAME)
             ),
             plotOutput("jobs_county")
+          )
+        ),
+        card(
+          card_header(class = "bg-primary", "County Level Exploration"),
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              selectInput(
+                "jobs_var_col", 
+                label = "Select a Variable to Explore",
+                choices = jobs_variables
+              ),
+            ),
+            layout_columns(
+              col_widths = c(7, 5), 
+              plotOutput("jobs_county_map", height = "400px"),
+              card(
+                class = "bg-light p-3 shadow-sm",
+                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+                div(class = "mb-2", strong("Labor Force:"), "X%"),
+                div(class = "mb-2", strong("Unemployed Population:"), "X%"),
+                div(class = "mb-2", strong("Civilian Employed Population:"), "X%"),
+                div(class = "mb-2", strong("Industry for Civilian Employed Population:"), "X%"),
+                div(class = "mb-2", strong("High School Graduate or Equivalent:"), "X%"),
+                div(class = "mb-2", strong("Bachelor's Degree:"), "X%"),
+                div(class = "mb-2", strong("Master's Degree:"), "X%"),
+                div(class = "mb-2", strong("Professional School Degree:"), "X%"),
+                div(class = "mb-2", strong("Doctorate Degree:"), "X%"),
+                div(class = "mb-2", strong("Master's Degree:"), "X%"),
+                div(class = "mb-2", strong("Workers Who Drive Alone:"), "X%"),
+                div(class = "mb-2", strong("Workers Using Public Transport:"), "X%"),
+                div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "X mins")
+              )
+            )
           )
         ),
         card(
@@ -285,13 +339,19 @@ server <- function(input, output, session) {
                    names_to = "Metric", values_to = "Value")
   })
   
-  output$pop_county <- renderPlot({
-    req(input$pop_county_col)
-    plot_county_map(df = vt_map, county_col = input$pop_county_col)
+  output$pop_county_map <- renderPlot({
+    req(input$pop_var_col)
+    plot_county_map_population(df = vt_map, county_col = input$pop_var_col)
   })
   
-  output$home_county <- renderPlot({
-    plot_county_map(vt_map, input$home_county_col)
+  output$homes_county_map <- renderPlot({
+    req(input$homes_var_col)
+    plot_county_map_homes(df = vt_map, county_col = input$homes_var_col)
+  })
+  
+  output$jobs_county_map <- renderPlot({
+    req(input$jobs_var_col)
+    plot_county_map_jobs(df = vt_map, county_col = input$jobs_var_col)
   })
   
   output$age_plot <- renderPlot({

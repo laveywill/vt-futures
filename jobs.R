@@ -166,3 +166,38 @@ plot_dependency_ratio <- function(dependency_df) {
     )
 }
 
+plot_county_map_jobs <- function(df, county_col) {
+  percent_cols <- c(
+    "Labor Force", "Unemployed Population", "Civilian Employed Population", 
+    "Industry for Civilian Employed Population",
+    "High School Graduate or Equivalent", "Bachelor's Degree", 
+    "Master's Degree", "Professional School Degree", "Doctorate Degree",
+    "Workers Who Drive Alone", "Workers Using Public Transport"
+  )
+  
+  county_sym <- sym(county_col)
+  is_percent <- as_string(county_sym) %in% percent_cols
+
+    df <- df %>%
+      mutate(value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym)
+    
+    label_aes <- aes(label = value_label)
+    fill_aes <- aes(fill = !!county_sym)
+    
+    fill_scale <- scale_fill_gradient(
+      low = "honeydew", 
+      high = "darkgreen",
+      name = county_col,
+      labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
+    )
+  
+  map <- ggplot(df) +
+    geom_sf(fill_aes) +
+    geom_sf_label(label_aes) +
+    geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
+    fill_scale +
+    theme_void()
+  
+  return(map)
+}
+

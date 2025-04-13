@@ -26,6 +26,7 @@ get_census_variables <- function() {
     ),
     stringsAsFactors = FALSE
   ) 
+  # do we want to include health insurance variables? we don't talk about them much in our recommendations
   return(census_variables)
 }
 
@@ -92,7 +93,18 @@ census_data <- function(year) {
       `Asian Alone` = `Asian Alone` / `Total Population`,
       `Hispanic or Latino Population` = `Hispanic or Latino Population` / `Total Population`,
       `Total Male Population` = `Total Male Population` / `Total Population`,
-      `Total Female Population` = `Total Female Population` / `Total Population`
+      `Total Female Population` = `Total Female Population` / `Total Population`,
+      `Labor Force` = `Labor Force` / `Total Population`,
+      `Unemployed Population` = `Unemployed Population` / `Total Population`,
+      `Civilian Employed Population` = `Civilian Employed Population` / `Total Population`,
+      `Industry for Civilian Employed Population` = `Industry for Civilian Employed Population` / `Total Population`,
+      `High School Graduate or Equivalent` = `High School Graduate or Equivalent` / `Total Population`,
+      `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
+      `Professional School Degree` = `Professional School Degree` / `Total Population`,
+      `Doctorate Degree` = `Doctorate Degree` / `Total Population`,
+      `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
+      `Workers Who Drive Alone` = `Workers Who Drive Alone` / `Total Workers`,
+      `Workers Using Public Transport` = `Workers Using Public Transport` / `Total Workers`,
     )
   
   # Pull df at the town ("place") level

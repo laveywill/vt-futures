@@ -112,7 +112,7 @@ national_averages <- c(
   "Hispanic or Latino Population" = 0.19
 )
 
-plot_county_map <- function(df, county_col, show_diff = FALSE) {
+plot_county_map_population <- function(df, county_col) {
   percent_cols <- c(
     "White Alone",
     "Black or African American Alone",
