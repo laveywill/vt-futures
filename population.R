@@ -102,17 +102,7 @@ jobs_homes_index_scale <- function(df, county) {
   
 }
 
-national_averages <- c(
-  "Median Age" = 38.7,
-  "Total Male Population" = 0.495,
-  "Total Female Population" = 0.505,
-  "White Alone" = 0.61,
-  "Black or African American Alone" = 0.14,
-  "Asian Alone" = 0.07,
-  "Hispanic or Latino Population" = 0.19
-)
-
-plot_county_map_population <- function(df, county_col) {
+plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
   percent_cols <- c(
     "White Alone",
     "Black or African American Alone",
@@ -122,21 +112,64 @@ plot_county_map_population <- function(df, county_col) {
     "Total Female Population"
   )
   
+  national_averages <- c(
+    "Median Age" = 38.7,
+    "Total Male Population" = 0.495,
+    "Total Female Population" = 0.505,
+    "White Alone" = 0.61,
+    "Black or African American Alone" = 0.14,
+    "Asian Alone" = 0.07,
+    "Hispanic or Latino Population" = 0.19
+  )
+  
   county_sym <- sym(county_col)
   is_percent <- as_string(county_sym) %in% percent_cols
-
-    df <- df %>%
-      mutate(value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym)
+  
+  if (show_diff && county_col %in% names(national_averages)) {
+    national_value <- national_averages[[county_col]]
     
+    df <- df %>%
+      mutate(
+        diff = !!county_sym - national_value,
+        value_label = if (is_percent) {
+          case_when(
+            diff > 0 ~ paste0("↑", round(diff * 100, 2), "%"),
+            diff < 0 ~ paste0("↓", round(diff * 100, 2), "%"),
+            TRUE ~ "0%"
+          )
+        } else {
+          case_when(
+            diff > 0 ~ paste0("↑", formatC(diff, format = "f", digits = 2)),
+            diff < 0 ~ paste0("↓", formatC(diff, format = "f", digits = 2)),
+            TRUE ~ "0"
+          )
+        }
+      )
+    
+    fill_aes <- aes(fill = diff)
     label_aes <- aes(label = value_label)
+    
+    fill_scale <- scale_fill_gradient2(
+      low = "lightblue", mid = "white", high = "yellow",
+      midpoint = 0,
+      name = paste("Difference from National Average"),
+      labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
+    )
+  } else {
+    df <- df %>%
+      mutate(
+        value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym
+      )
+    
     fill_aes <- aes(fill = !!county_sym)
+    label_aes <- aes(label = value_label)
     
     fill_scale <- scale_fill_gradient(
-      low = "honeydew", 
-      high = "darkgreen",
+      low = "honeydew", high = "darkgreen",
       name = county_col,
       labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
     )
+  }
   
   map <- ggplot(df) +
     geom_sf(fill_aes) +

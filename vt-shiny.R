@@ -115,6 +115,10 @@ ui <- page_fluid(
                 label = "Select a Variable to Explore",
                 choices = population_variables
               ),
+              conditionalPanel(
+                condition = "input.pop_var_col != 'Total Population'",
+                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+              )
             ),
             layout_columns(
               col_widths = c(7, 5), 
@@ -283,11 +287,11 @@ ui <- page_fluid(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
                 div(class = "mb-2", strong("Labor Force:"), "X%"),
-                div(class = "mb-2", strong("Unemployed Population:"), "X%"),
+                div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
                 div(class = "mb-2", strong("Civilian Employed Population:"), "X%"),
                 div(class = "mb-2", strong("Industry for Civilian Employed Population:"), "X%"),
-                div(class = "mb-2", strong("High School Graduate or Equivalent:"), "X%"),
-                div(class = "mb-2", strong("Bachelor's Degree:"), "X%"),
+                div(class = "mb-2", strong("High School Graduate or Equivalent:"), "27.9%"),
+                div(class = "mb-2", strong("Bachelor's Degree:"), "23.5%"),
                 div(class = "mb-2", strong("Master's Degree:"), "X%"),
                 div(class = "mb-2", strong("Professional School Degree:"), "X%"),
                 div(class = "mb-2", strong("Doctorate Degree:"), "X%"),
@@ -341,7 +345,14 @@ server <- function(input, output, session) {
   
   output$pop_county_map <- renderPlot({
     req(input$pop_var_col)
-    plot_county_map_population(df = vt_map, county_col = input$pop_var_col)
+    
+    show_diff <- isTRUE(input$show_natl_diff)
+    
+    plot_county_map_population(
+      df = vt_map,
+      county_col = input$pop_var_col,
+      show_diff = show_diff
+    )
   })
   
   output$homes_county_map <- renderPlot({
