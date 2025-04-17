@@ -197,7 +197,14 @@ ui <- page_fluid(
                   Rates of housing construction were healthy in the 1970s and 
                   1980s relative to the needs of the population at the time. 
                   Vermont's current housing shortage is the result of decades of 
-                  decelerating housing construction.")
+                  decelerating housing construction."),
+                checkboxInput("show_homes_county_view", "View by County", value = FALSE),
+                conditionalPanel(
+                  condition = "input.show_homes_county_view == true",
+                  selectInput("selected_homes_county", "Select a County",
+                              choices = unique(housing$NAME),
+                              selected = NULL)
+                )
               ),
               mainPanel(
                 p("Estimated Housing Units by Year Structure Built"),
@@ -377,7 +384,15 @@ server <- function(input, output, session) {
   })
   
   output$home_plot <- renderPlot({
+    
+    view_county <- isTRUE(input$show_homes_county_view)
+    
+    if (view_county) {
+      plot_county_housing(housing, input$selected_homes_county)
+    } else {
     plot_state_housing(housing)
+    }
+    
   })
   
   output$jobs_plot <- renderPlot({
