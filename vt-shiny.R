@@ -49,9 +49,7 @@ state <- census_data$state
 county <- census_data$county
 town <- census_data$place
 
-housing <- get_housing_units_data(year)
-state_housing_data <- housing$state
-county_housing_data <- housing$county
+housing <- get_housing_data(year)
 
 labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
@@ -379,7 +377,7 @@ server <- function(input, output, session) {
   })
   
   output$home_plot <- renderPlot({
-    plot_state_housing_units(state_housing_data)
+    plot_state_housing(housing)
   })
   
   output$jobs_plot <- renderPlot({
