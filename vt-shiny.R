@@ -13,6 +13,7 @@ library(DT)
 library(readxl)
 library(shinydashboard)
 library(rlang)
+library(forcats)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -49,9 +50,7 @@ county <- census_data$county
 town <- census_data$place
 natl <- census_data$natl
 
-housing <- get_housing_units_data(year)
-state_housing_data <- housing$state
-county_housing_data <- housing$county
+housing <- get_housing_data(year)
 
 labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
@@ -200,7 +199,14 @@ ui <- page_fluid(
                   Rates of housing construction were healthy in the 1970s and 
                   1980s relative to the needs of the population at the time. 
                   Vermont's current housing shortage is the result of decades of 
-                  decelerating housing construction.")
+                  decelerating housing construction."),
+                checkboxInput("show_homes_county_view", "View by County", value = FALSE),
+                conditionalPanel(
+                  condition = "input.show_homes_county_view == true",
+                  selectInput("selected_homes_county", "Select a County",
+                              choices = unique(housing$NAME),
+                              selected = NULL)
+                )
               ),
               mainPanel(
                 p("Estimated Housing Units by Year Structure Built"),
@@ -386,7 +392,15 @@ server <- function(input, output, session) {
   })
   
   output$home_plot <- renderPlot({
-    plot_state_housing_units(state_housing_data)
+    
+    view_county <- isTRUE(input$show_homes_county_view)
+    
+    if (view_county) {
+      plot_county_housing(housing, input$selected_homes_county)
+    } else {
+    plot_state_housing(housing)
+    }
+    
   })
   
   output$jobs_plot <- renderPlot({
