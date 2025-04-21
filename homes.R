@@ -71,28 +71,84 @@ plot_state_housing_units <- function(state_df) {
   return(p)
 }
 
-plot_county_map_homes <- function(df, county_col) {
+plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
   dollar_cols <- c(
     "Median Home Value",
     "Median Gross Rent"
   )
   
-  county_sym <- sym(county_col)
-  is_dollar <- as_string(county_sym) %in% dollar_cols
-  
-  df <- df %>%
-    mutate(value_label = if (is_dollar) dollar(!!county_sym) else !!county_sym)
-  
-  label_aes <- aes(label = value_label)
-  fill_aes <- aes(fill = !!county_sym)
-  
-  fill_scale <- scale_fill_gradient(
-    low = "honeydew", 
-    high = "darkgreen",
-    name = county_col,
-    labels = if (is_dollar) dollar else waiver()
+  percent_cols <- c(
+    "Occupied Housing Units",
+    "Vacant Housing Units",
+    "Owner-Occupied Housing Units",
+    "Renter-Occupied Housing Units"
   )
   
+  national_averages <- c(
+    "Median Home Value" = 348000,
+    "Median Gross Rent" = 1348,
+    "Occupied Housing Units" = 0.65,
+    "Vacant Housing Units" = 0.10,
+    "Owner-Occupied Housing Units" = 0.59,
+    "Renter-Occupied Housing Units" = 0.31
+  )
+  
+  county_sym <- sym(county_col)
+  is_dollar <- as_string(county_sym) %in% dollar_cols
+  is_percent <- as_string(county_sym) %in% percent_cols
+  
+  if (show_diff && county_col %in% names(national_averages)) {
+    national_value <- national_averages[[county_col]]
+    
+    df <- df %>%
+      mutate(
+        diff = !!county_sym - national_value,
+        value_label = if (is_percent) {
+          case_when(
+            diff > 0 ~ paste0("⬆️", round(diff * 100, 2), "%"),
+            diff < 0 ~ paste0("⬇️", round(diff * 100, 2), "%"),
+            TRUE ~ "0%"
+          )
+        } 
+        else if (is_dollar) {
+          case_when(
+            diff > 0 ~ paste0("⬆️", dollar(diff)),
+            diff < 0 ~ paste0("⬇️", dollar(diff)),
+            TRUE ~ "$0"
+          )
+        } 
+        else {
+          case_when(
+            diff > 0 ~ paste0("⬆️", formatC(diff, format = "f", digits = 2)),
+            diff < 0 ~ paste0("⬇️", formatC(diff, format = "f", digits = 2)),
+            TRUE ~ "0"
+          )
+        }
+      )
+    
+    fill_aes <- aes(fill = diff)
+    label_aes <- aes(label = value_label)
+    
+    fill_scale <- scale_fill_viridis_c(name = "Difference")
+    } else {
+      df <- df %>%
+        mutate(value_label = case_when(
+          is_dollar ~ dollar(!!county_sym),
+          is_percent ~ paste0(round(!!county_sym * 100, 2), "%"),
+          TRUE ~ as.character(!!county_sym)
+        )
+        )
+    
+    fill_aes <- aes(fill = !!county_sym)
+    label_aes <- aes(label = value_label)
+  
+    fill_scale <- scale_fill_gradient(
+      low = "honeydew", 
+      high = "darkgreen",
+      name = NULL,
+      labels = if (is_dollar) dollar else waiver()
+    )
+    }
   map <- ggplot(df) +
     geom_sf(fill_aes) +
     geom_sf_label(label_aes) +

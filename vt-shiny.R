@@ -36,7 +36,7 @@ homes_variables = c(
 )
 
 jobs_variables = c(
-  "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+  "Labor Force", "Unemployed Population", 
   "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
   "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
 )
@@ -47,6 +47,7 @@ census_variables <- get_census_variables()
 state <- census_data$state
 county <- census_data$county
 town <- census_data$place
+natl <- census_data$natl
 
 housing <- get_housing_units_data(year)
 state_housing_data <- housing$state
@@ -56,7 +57,8 @@ labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
 dependency_df <- get_dependency_data(labor_force_df)
 
-state_age_data <- build_state_age_df(state)
+state_age_data <- build_age_df(state)
+natl_age_data <- build_age_df(natl)
 vt_map <- county_level_map(county)
 
 theme <- bs_theme(
@@ -122,7 +124,7 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("pop_county_map", height = "400px"),
+              plotOutput("pop_county_map", height = "300px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -217,20 +219,23 @@ ui <- page_fluid(
                 label = "Select a Variable to Explore",
                 choices = homes_variables
               ),
+              conditionalPanel(
+                condition = "input.homes_var_col != 'Total Housing Units'",
+                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+              )
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("homes_county_map", height = "400px"),
+              plotOutput("homes_county_map", height = "300px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Median Home Value:"), "$X"),
-                div(class = "mb-2", strong("Median Gross Rent:"), "$X"),
-                div(class = "mb-2", strong("Total Housing Units:"), "X"),
-                div(class = "mb-2", strong("Occupied Housing Units:"), "X"),
-                div(class = "mb-2", strong("Vacant Housing Units:"), "X"),
-                div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "X"),
-                div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "X")
+                div(class = "mb-2", strong("Median Home Value:"), "$348,000"),
+                div(class = "mb-2", strong("Median Gross Rent:"), "$1,348"),
+                div(class = "mb-2", strong("Occupied Housing Units:"), "65%"),
+                div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
+                div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
+                div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
               )
             )
           )
@@ -282,23 +287,21 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("jobs_county_map", height = "400px"),
+              plotOutput("jobs_county_map", height = "300px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
                 div(class = "mb-2", strong("Labor Force:"), "X%"),
                 div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
-                div(class = "mb-2", strong("Civilian Employed Population:"), "X%"),
-                div(class = "mb-2", strong("Industry for Civilian Employed Population:"), "X%"),
-                div(class = "mb-2", strong("High School Graduate or Equivalent:"), "27.9%"),
-                div(class = "mb-2", strong("Bachelor's Degree:"), "23.5%"),
-                div(class = "mb-2", strong("Master's Degree:"), "X%"),
-                div(class = "mb-2", strong("Professional School Degree:"), "X%"),
-                div(class = "mb-2", strong("Doctorate Degree:"), "X%"),
-                div(class = "mb-2", strong("Master's Degree:"), "X%"),
-                div(class = "mb-2", strong("Workers Who Drive Alone:"), "X%"),
-                div(class = "mb-2", strong("Workers Using Public Transport:"), "X%"),
-                div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "X mins")
+                div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
+                div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
+                div(class = "mb-2", strong("Master's Degree*:"), "9.4%"),
+                div(class = "mb-2", strong("Doctorate Degree*:"), "2.1%"),
+                div(class = "mb-2", strong("Professional School Degree*:"), "1.5%"),
+                div(class = "mb-2", strong("Workers Who Drive Alone:"), "77%"),
+                div(class = "mb-2", strong("Workers Using Public Transport:"), "5%"),
+                div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
+                div(class = "mb-2", "*indicates highest level of education at this level"),
               )
             )
           )
@@ -357,7 +360,12 @@ server <- function(input, output, session) {
   
   output$homes_county_map <- renderPlot({
     req(input$homes_var_col)
-    plot_county_map_homes(df = vt_map, county_col = input$homes_var_col)
+    
+    show_diff <- isTRUE(input$show_natl_diff)
+    
+    plot_county_map_homes(df = vt_map, 
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
   })
   
   output$jobs_county_map <- renderPlot({
@@ -366,7 +374,7 @@ server <- function(input, output, session) {
   })
   
   output$age_plot <- renderPlot({
-    plot_age_distribution(state_age_data)
+    plot_age_distribution(state_age_data, natl_age_data)
   })
   
   output$county_plot <- renderPlot({

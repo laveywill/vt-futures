@@ -113,51 +113,148 @@ age_distribution_data <- function(year) {
 age_distribution_data(2023)
 ```
 
-
-
-
-
+```{r}
+  natl_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = 2023,
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "us:1"
+  )
+  
+  natl_census_data <- natl_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+```
 
 
 ```{r}
-# Create a new column for grouping into buckets
-plot_age_distribution <- function(df) {
-  age_groups <- df %>%
-  mutate(age_bucket = case_when(
-    age_group %in% c("Under 5 years", "5 to 9 years", "10 to 14 years") ~ "0-14 years",
-    age_group %in% c("15 to 19 years", "20 to 24 years") ~ "15-24 years",
-    age_group %in% c("25 to 29 years","30 to 34 years","35 to 39 years","40 to 44 years","45 to 49 years") ~ "25-49 years",
-    age_group %in% c("50 to 54 years", "55 to 59 years", "60 to 64 years") ~ "50-64 years",
-    age_group %in% c("65 to 69 years", "70 to 74 years", "75 to 79 years", "80 to 84 years", "85 years and over") ~ "65+ years",
-    TRUE ~ "Unknown"
-  ))
+plot_age_distribution <- function(state_df, national_df) {
+  # Shared age bucket and label formatting
+  process_age_data <- function(df) {
+    df %>%
+      mutate(
+        age_bucket = case_when(
+          age_group %in% c("Under 5 years", "5 to 9 years", "10 to 14 years") ~ "0-14 years",
+          age_group %in% c("15 to 19 years", "20 to 24 years") ~ "15-24 years",
+          age_group %in% c("25 to 29 years","30 to 34 years","35 to 39 years",
+                           "40 to 44 years","45 to 49 years") ~ "25-49 years",
+          age_group %in% c("50 to 54 years", "55 to 59 years", "60 to 64 years") ~ "50-64 years",
+          age_group %in% c("65 to 69 years", "70 to 74 years", "75 to 79 years",
+                           "80 to 84 years", "85 years and over") ~ "65+ years",
+          TRUE ~ "Unknown"
+        ),
+        age_label = case_when(
+          age_group == "Under 5 years" ~ "Under 5",
+          age_group == "85 years and over" ~ "85+",
+          TRUE ~ gsub(" to ", " - ", gsub(" years", "", age_group))
+        )
+      )
+  }
+  state_df <- process_age_data(state_df)
+  national_df <- process_age_data(national_df)
 
-# Convert age_group to a factor with correct ordering
-age_groups$age_group <- factor(age_groups$age_group, levels = c(
-  "85 years and over", "80 to 84 years", "75 to 79 years", "70 to 74 years",
-"65 to 69 years", "60 to 64 years", "55 to 59 years", "50 to 54 years",
-"45 to 49 years", "40 to 44 years", "35 to 39 years",
-"30 to 34 years", "25 to 29 years","20 to 24 years","15 to 19 years","10 to 14 years", 
-"5 to 9 years", "Under 5 years"
-))
+  age_levels <- rev(c("85+", "80 - 84", "75 - 79", "70 - 74",
+                      "65 - 69", "60 - 64", "55 - 59", "50 - 54",
+                      "45 - 49", "40 - 44", "35 - 39", "30 - 34", 
+                      "25 - 29", "20 - 24", "15 - 19", "10 - 14", 
+                      "5 - 9", "Under 5"))
+  state_df$age_label <- factor(state_df$age_label, levels = age_levels)
+  national_df$age_label <- factor(national_df$age_label, levels = age_levels)
 
-# Create the bar chart with color-coded buckets
-ggplot(age_groups, aes(y = age_group, x = total_population, fill = age_bucket)) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = total_population), vjust = 0.3, hjust = 3, color="white", size = 3) +
-  labs(x = "Total Population", y = "Age Group", title = "Vermont Age Group Distribution from 2023") +
-  theme_minimal() +
-  scale_fill_manual(values = c("0-14 years" = "deepskyblue1", "15-24 years" = "aquamarine2", 
-                               "25-49 years" = "aquamarine4", "50-64 years" = "orange", 
-                               "65+ years" = "red")) +
-  theme(legend.position = "none")
+  scale_factor <- sum(state_df$total_population) / sum(national_df$total_population)
+
+  national_density <- national_df %>%
+    mutate(age_numeric = as.numeric(age_label),
+           scaled_population = total_population * scale_factor) %>%
+    complete(age_label = age_levels, fill = list(`Total Population` = 0)) %>%
+    arrange(age_label)
+
+  # Scale national density to match the range of state data
+ # national_density$scaled_density <- scales::rescale(national_density$total_population, to = c(0, max_state))
+
+  # Plot
+  ggplot(state_df, aes(x = age_label, y = total_population, fill = age_bucket)) +
+    geom_bar(stat = "identity") +
+    geom_line(data = national_density, aes(x = age_label, y = scaled_population, group = 1),
+              color = "black", size = 1.2) +
+    labs(
+      x = "Age Group", 
+      y = "\nTotal Population", 
+      title = "Vermont Age Group Distribution (2023)"
+    ) +
+    scale_y_continuous(labels = scales::comma) +
+    scale_fill_manual(values = c(
+      "0-14 years" = "deepskyblue1", 
+      "15-24 years" = "aquamarine2", 
+      "25-49 years" = "aquamarine4", 
+      "50-64 years" = "orange", 
+      "65+ years" = "red"
+    )) +
+    theme_minimal() +
+    theme(
+      legend.position = "none", 
+      text = element_text(family = "Georgia"),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      axis.text.x = element_text(size = 14, face = "bold", angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 22, face = "bold")
+    )
+}
+```
+
+
+```{r}
+build_state_age_df <- function(df) {
+  # Filter for state level age demographic data
+  age <- df %>%
+    select(starts_with("B01001_"))  %>%
+    summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
+  
+  age_long <- as.data.frame(t(age))
+  colnames(age_long) <- "population"
+  age_long$variable <- rownames(age_long) 
+  age_long$population <- as.numeric(age_long$population)  
+  
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  age_long$age_group <- sapply(age_long$variable, function(var) {
+    matched_group <- names(Filter(function(pattern) str_detect(var, pattern), age_group_patterns))
+    if (length(matched_group) > 0) return(matched_group) else return(NA)
+  })
+  
+  age_summary <- age_long %>%
+    group_by(age_group) %>%
+    summarise(total_population = sum(population, na.rm = TRUE)) %>%
+    filter(!is.na(age_group)) 
+  return(age_summary)
 }
 ```
 
 
 ```{r}
 age_groups2023 <- age_distribution_data(2023)
-plot_age_distribution(age_groups2023)
+natl_data_age <- build_state_age_df(natl_census_data)
+plot_age_distribution(age_groups2023, natl_data_age)
 ```
 
 
@@ -404,7 +501,24 @@ school <- read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
   summarise(latency = sum(latency)) 
 head(school, 40)
 ```
+```{r}
+library(sf)
+addison <- read_sf("ACRPC_Zoning.geojson")
+unique(addison$Jurisdiction)
+```
 
+```{r}
+head(addison)
+
+addison |>
+  filter(str_detect(`Jurisdiction District Name`, "Middlebury")) |>
+  # ggplot() +
+  # geom_sf(aes(fill = `4F Allowance`))
+  leaflet() |>
+  addTiles() |>
+  addPolygons(label = ~`Jurisdiction District Name`,
+                fill = ~`1F Allowance`)
+```
 
 
 

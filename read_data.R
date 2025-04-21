@@ -64,6 +64,17 @@ census_variables <- data.frame(
 census_data <- function(year) {
   Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
   
+  # Pull df at the national level
+  natl_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "us:1"
+  )
+  
+  natl_census_data <- natl_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+  
   # Pull df at the state level
   state_census_data_raw <- getCensus(
     name = "acs/acs5",
@@ -96,8 +107,6 @@ census_data <- function(year) {
       `Total Female Population` = `Total Female Population` / `Total Population`,
       `Labor Force` = `Labor Force` / `Total Population`,
       `Unemployed Population` = `Unemployed Population` / `Total Population`,
-      `Civilian Employed Population` = `Civilian Employed Population` / `Total Population`,
-      `Industry for Civilian Employed Population` = `Industry for Civilian Employed Population` / `Total Population`,
       `High School Graduate or Equivalent` = `High School Graduate or Equivalent` / `Total Population`,
       `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
       `Professional School Degree` = `Professional School Degree` / `Total Population`,
@@ -105,6 +114,10 @@ census_data <- function(year) {
       `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
       `Workers Who Drive Alone` = `Workers Who Drive Alone` / `Total Workers`,
       `Workers Using Public Transport` = `Workers Using Public Transport` / `Total Workers`,
+      `Occupied Housing Units` = `Occupied Housing Units` / `Total Housing Units`,
+      `Vacant Housing Units` = `Vacant Housing Units` / `Total Housing Units`,
+      `Owner-Occupied Housing Units` = `Owner-Occupied Housing Units` / `Total Housing Units`,
+      `Renter-Occupied Housing Units` = `Renter-Occupied Housing Units` / `Total Housing Units`
     )
   
   # Pull df at the town ("place") level
@@ -128,14 +141,15 @@ census_data <- function(year) {
   # Return all of the dataframes constructed
   return(list(state = state_census_data, 
               county = county_census_data, 
-              town = place_census_data))
+              town = place_census_data,
+              natl = natl_census_data))
 }
 
 
 ### FUNCTION TO CREATE STATE AGE DATAFRAME ###
 
-build_state_age_df <- function(df) {
-  # Filter for state level age demographic data
+build_age_df <- function(df) {
+  # Filter for age demographic data
   age <- df %>%
     select(starts_with("B01001_"))  %>%
     summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
@@ -172,11 +186,11 @@ build_state_age_df <- function(df) {
     if (length(matched_group) > 0) return(matched_group) else return(NA)
   })
   
-  state_age_summary <- age_long %>%
+  age_summary <- age_long %>%
     group_by(age_group) %>%
     summarise(total_population = sum(population, na.rm = TRUE)) %>%
     filter(!is.na(age_group)) 
-  return(state_age_summary)
+  return(age_summary)
 }
 
 ## BUILD DF FOR COUNTY MAP ##

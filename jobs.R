@@ -168,28 +168,68 @@ plot_dependency_ratio <- function(dependency_df) {
 
 plot_county_map_jobs <- function(df, county_col) {
   percent_cols <- c(
-    "Labor Force", "Unemployed Population", "Civilian Employed Population", 
-    "Industry for Civilian Employed Population",
+    "Labor Force", "Unemployed Population",
     "High School Graduate or Equivalent", "Bachelor's Degree", 
     "Master's Degree", "Professional School Degree", "Doctorate Degree",
     "Workers Who Drive Alone", "Workers Using Public Transport"
   )
   
+  national_averages <- c(
+    "Labor Force", 
+    "Unemployed Population" = 0.042,
+    "High School Graduate or Equivalent" = 0.279, 
+    "Bachelor's Degree" = 0.235, 
+    "Master's Degree" = 0.094, 
+    "Professional School Degree" = 0.015, 
+    "Doctorate Degree" = 0.021,
+    "Workers Who Drive Alone" = 0.77, 
+    "Workers Using Public Transport" = 0.05,
+    "Mean Travel Time to Work (Minutes)" = 27
+  )
+  
   county_sym <- sym(county_col)
   is_percent <- as_string(county_sym) %in% percent_cols
 
-    df <- df %>%
-      mutate(value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym)
+  if (show_diff && county_col %in% names(national_averages)) {
+    national_value <- national_averages[[county_col]]
     
+    df <- df %>%
+      mutate(
+        diff = !!county_sym - national_value,
+        value_label = if (is_percent) {
+          case_when(
+            diff > 0 ~ paste0("⬆️", round(diff * 100, 2), "%"),
+            diff < 0 ~ paste0("⬇️", round(diff * 100, 2), "%"),
+            TRUE ~ "0%"
+          )
+        } else {
+          case_when(
+            diff > 0 ~ paste0("⬆️", formatC(diff, format = "f", digits = 2)),
+            diff < 0 ~ paste0("⬇️", formatC(diff, format = "f", digits = 2)),
+            TRUE ~ "0"
+          )
+        }
+      )
+    
+    fill_aes <- aes(fill = diff)
     label_aes <- aes(label = value_label)
+    
+    fill_scale <- scale_fill_viridis_c(name = NULL)
+  } else {
+    df <- df %>%
+      mutate(
+        value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym
+      )
+    
     fill_aes <- aes(fill = !!county_sym)
+    label_aes <- aes(label = value_label)
     
     fill_scale <- scale_fill_gradient(
-      low = "honeydew", 
-      high = "darkgreen",
-      name = county_col,
+      low = "honeydew", high = "darkgreen",
+      name = NULL, 
       labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
     )
+  }
   
   map <- ggplot(df) +
     geom_sf(fill_aes) +
