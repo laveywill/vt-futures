@@ -31,37 +31,6 @@ get_census_variables <- function() {
 }
 
 census_data <- function(year) {
-  
-  census_variables <- get_census_variables()
-
-}
-
-census_variables <- data.frame(
-  code = c(
-    "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
-    "B19013_001E", "B19001_002E", "B19301_001E", "B17001_002E", "B25077_001E", "B25064_001E",
-    "B23025_002E", "B23025_005E", "B23006_002E", "B24011_001E",
-    "B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E",
-    "B25001_001E", "B25002_002E", "B25002_003E", "B25003_002E", "B25003_003E",
-    "B08006_001E", "B08006_003E", "B08006_008E", "B08013_001E",
-    "B27001_001E", "B27001_005E", "B27001_008E", "B27001_012E"
-  ),
-  title = c(
-    "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
-    "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population",
-    "Median Household Income", "Household Income Brackets", "Per Capita Income", "Population Below Poverty Level", 
-    "Median Home Value", "Median Gross Rent",
-    "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
-    "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
-    "Total Housing Units", "Occupied Housing Units", "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units",
-    "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)",
-    "Total Population for Health Insurance Coverage", "Population with Public Health Insurance", 
-    "Population with Private Health Insurance", "Population with No Health Insurance"
-  ),
-  stringsAsFactors = FALSE
-)
-
-census_data <- function(year) {
   Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
   
   # Pull df at the national level
@@ -405,6 +374,76 @@ get_dependency_data <- function(labor_force_df) {
   return(df)
 }
 
+get_housing_data <- function(year = 2023) {
+  
+  total_vars <- c(
+    "B25034_002E", "B25034_003E", "B25034_004E", "B25034_005E", 
+    "B25034_006E", "B25034_007E", "B25034_008E", "B25034_009E", 
+    "B25034_010E", "B25034_011E"
+  )
+  
+  owner_vars <- c(
+    "B25036_003E", "B25036_004E", "B25036_005E", "B25036_006E", 
+    "B25036_007E", "B25036_008E", "B25036_009E", "B25036_010E", 
+    "B25036_011E", "B25036_012E"
+  )
+  
+  renter_vars <- c(
+    "B25036_014E", "B25036_015E", "B25036_016E", "B25036_017E", 
+    "B25036_018E", "B25036_019E", "B25036_020E", "B25036_021E", 
+    "B25036_022E", "B25036_023E"
+  )
+  
+  all_vars <- c("NAME", total_vars, owner_vars, renter_vars)
+  
+  housing_data <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = all_vars,
+    region = "county:*",
+    regionin = "state:50"
+  )
+  
+  # Reshape to long format and categorize
+  tidy_data <- housing_data |>
+    pivot_longer(cols = -c(NAME, state, county), names_to = "Variable", values_to = "Count") |>
+    mutate(
+      Category = case_when(
+        Variable %in% total_vars ~ "Total",
+        Variable %in% owner_vars ~ "Owner",
+        Variable %in% renter_vars ~ "Renter"
+      ),
+      Year_Built = case_when(
+        Variable %in% c("B25034_002E", "B25036_003E", "B25036_014E") ~ "2014 or later",
+        Variable %in% c("B25034_003E", "B25036_004E", "B25036_015E") ~ "2010-2013",
+        Variable %in% c("B25034_004E", "B25036_005E", "B25036_016E") ~ "2000-2009",
+        Variable %in% c("B25034_005E", "B25036_006E", "B25036_017E") ~ "1990-1999",
+        Variable %in% c("B25034_006E", "B25036_007E", "B25036_018E") ~ "1980-1989",
+        Variable %in% c("B25034_007E", "B25036_008E", "B25036_019E") ~ "1970-1979",
+        Variable %in% c("B25034_008E", "B25036_009E", "B25036_020E") ~ "1960-1969",
+        Variable %in% c("B25034_009E", "B25036_010E", "B25036_021E") ~ "1950-1959",
+        Variable %in% c("B25034_010E", "B25036_011E", "B25036_022E") ~ "1940-1949",
+        Variable %in% c("B25034_011E", "B25036_012E", "B25036_023E") ~ "1939 or earlier"
+      ),
+      NAME = gsub(" County, Vermont", "", NAME)
+    ) |>
+    select(NAME, county, Year_Built, Category, Count)
+  
+  final_data <- tidy_data |>
+    pivot_wider(names_from = Category, values_from = Count) |>
+    mutate(
+      Vacant = Total - Owner - Renter
+    ) |>
+    pivot_longer(cols = c(Owner, Renter, Vacant), names_to = "Tenure", values_to = "Count")
+  
+  final_data$Tenure <- fct_rev(final_data$Tenure)
+  final_data$Year_Built <- fct_rev(final_data$Year_Built)
+  
+  out <- final_data
+  
+  return(out)
+}
+
 get_zoning_data <- function() {
   
   directory_path <- paste0(pth, "/data/zoning_data")
@@ -413,7 +452,8 @@ get_zoning_data <- function() {
   
   list_out <- lapply(files, read_sf)
   
-  out <- rbindlist(list_out, fill = TRUE)
+  out <- rbindlist(list_out, fill = TRUE) |> 
+    select(-`Bylaw Date`)
   
   return(out)
 }

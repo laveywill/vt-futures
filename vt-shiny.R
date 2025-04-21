@@ -52,6 +52,7 @@ town <- census_data$place
 natl <- census_data$natl
 
 housing <- get_housing_data(year)
+zoning <- get_zoning_data()
 
 labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
@@ -72,10 +73,13 @@ theme <- bs_theme(
 
 ui <- page_fluid(
   theme = theme,
-  titlePanel("Vermont Futures Project: Interactive Dashboard"),
-  p("This is the main page for the data exploration dashboard. This should be placed right below the title."),
+  card(
+    card_header(class = "bg-primary", "Vermont Futures Project: Interactive Dashboard"),
+    card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
+  ),
   
-  ## POPULALTION PAGE ## 
+  #### POPULALTION PAGE ####
+
   navset_card_pill(
     nav_panel("Population",
       layout_column_wrap(  
@@ -185,7 +189,7 @@ ui <- page_fluid(
       )
     ),
  
- ## HOMES PAGE ## 
+ #### HOMES PAGE ####
     
     nav_panel("Homes",
       layout_column_wrap(
@@ -233,7 +237,7 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("homes_county_map", height = "300px"),
+              plotOutput("homes_county_map", click = "homes_map_click", height = "300px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -244,13 +248,17 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
                 div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
               )
+            ), 
+            conditionalPanel(
+              condition = "output.zoning_county_selected",
+              plotOutput("zoning_map")
             )
           )
         ),
       )
     ),
     
- ## JOBS PAGE ## 
+ #### JOBS PAGE #### 
  
     nav_panel(
       "Jobs",
@@ -369,16 +377,6 @@ server <- function(input, output, session) {
     )
   })
   
-  output$homes_county_map <- renderPlot({
-    req(input$homes_var_col)
-    
-    show_diff <- isTRUE(input$show_natl_diff)
-    
-    plot_county_map_homes(df = vt_map, 
-                          county_col = input$homes_var_col,
-                          show_diff = show_diff)
-  })
-  
   output$jobs_county_map <- renderPlot({
     req(input$jobs_var_col)
     
@@ -423,6 +421,45 @@ server <- function(input, output, session) {
   
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
+  })
+  
+  
+  # Zoning interactive map
+  output$homes_county_map <- renderPlot({
+    req(input$homes_var_col)
+    
+    show_diff <- isTRUE(input$show_natl_diff)
+    
+    plot_county_map_homes(df = vt_map, 
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
+  })
+  
+  selected_zoning_county <- reactiveVal(NULL)
+  observeEvent(input$homes_map_click, {
+    click <- input$homes_map_click
+    if (is.null(click)) return()
+    
+    # Convert click to sf point
+    click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(vt_map))
+    
+    # Find which county was clicked
+    clicked_index <- st_intersects(click_point, vt_map, sparse = FALSE)
+    
+    if (any(clicked_index)) {
+      clicked_name <- vt_map$NAME[which(clicked_index)[1]]
+      selected_zoning_county(clicked_name)
+    }
+  })
+  output$zoning_county_selected <- reactive({
+    !is.null(selected_zoning_county())
+  })
+  outputOptions(output, "zoning_county_selected", suspendWhenHidden = FALSE)
+  
+  output$zoning_map <- renderPlot({
+    req(selected_zoning_county())
+    county_data <- filter(zoning, County == selected_zoning_county())
+    plot_county_zoning(county_data)
   })
 
 }
