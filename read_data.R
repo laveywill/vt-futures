@@ -405,3 +405,15 @@ get_dependency_data <- function(labor_force_df) {
   return(df)
 }
 
+get_zoning_data <- function() {
+  
+  directory_path <- paste0(pth, "/data/zoning_data")
+  
+  files <- list.files(directory_path, full.names = T)
+  
+  list_out <- lapply(files, read_sf)
+  
+  out <- rbindlist(list_out, fill = TRUE)
+  
+  return(out)
+}

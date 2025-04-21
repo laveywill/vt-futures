@@ -14,6 +14,7 @@ library(readxl)
 library(shinydashboard)
 library(rlang)
 library(forcats)
+library(data.table)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
