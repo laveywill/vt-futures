@@ -290,6 +290,10 @@ ui <- page_fluid(
                 label = "Select a Variable to Explore",
                 choices = jobs_variables
               ),
+              conditionalPanel(
+                condition = "input.jobs_var_col != `Labor Force`",
+                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+              )
             ),
             layout_columns(
               col_widths = c(7, 5), 
@@ -376,7 +380,12 @@ server <- function(input, output, session) {
   
   output$jobs_county_map <- renderPlot({
     req(input$jobs_var_col)
-    plot_county_map_jobs(df = vt_map, county_col = input$jobs_var_col)
+    
+    show_diff <- isTRUE(input$show_natl_diff)
+    
+    plot_county_map_jobs(df = vt_map, 
+                         county_col = input$jobs_var_col, 
+                         show_diff = show_diff)
   })
   
   output$age_plot <- renderPlot({

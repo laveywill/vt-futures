@@ -60,9 +60,6 @@ plot_lf_county <- function(labor_force_df, county) {
   
   upper_limit <- max_population * 1.1
   
-  county_data_long$age_group <- factor(county_data_long$age_group, levels = rev(unique(county_data_long$age_group)))
-  
-  
   p <- ggplot(county_data_long, aes(x = age_group, y = Population, fill = fill_factor)) +
     geom_bar(
       stat = "identity", 
@@ -166,7 +163,7 @@ plot_dependency_ratio <- function(dependency_df) {
     )
 }
 
-plot_county_map_jobs <- function(df, county_col) {
+plot_county_map_jobs <- function(df, county_col, show_diff) {
   percent_cols <- c(
     "Labor Force", "Unemployed Population",
     "High School Graduate or Equivalent", "Bachelor's Degree", 
