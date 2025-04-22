@@ -130,10 +130,16 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
   return(map)
 }
 
-plot_county_zoning <- function(zoning_df) {
+plot_county_zoning <- function(zoning_df, county_selection) {
   
-  zoning_df |> 
+  p <- zoning_df |> 
+    filter(County == county_selection) |> 
     ggplot() +
-    geom_sf(aes(fill = `4F Allowance`))
+    geom_sf(aes(fill = `1F Allowance`,
+                geometry = geometry))
   
+    return(ggplotly(p))
 }
+  
+
+

@@ -15,6 +15,7 @@ library(shinydashboard)
 library(rlang)
 library(forcats)
 library(data.table)
+library(plotly)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -44,8 +45,8 @@ jobs_variables = c(
 )
 
 #### Read in data ####
-census_data <- census_data(year)
 census_variables <- get_census_variables()
+census_data <- census_data(year)
 state <- census_data$state
 county <- census_data$county
 town <- census_data$place
@@ -251,7 +252,7 @@ ui <- page_fluid(
             ), 
             conditionalPanel(
               condition = "output.zoning_county_selected",
-              plotOutput("zoning_map")
+              plotlyOutput("zoning_map")
             )
           )
         ),
@@ -456,10 +457,9 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "zoning_county_selected", suspendWhenHidden = FALSE)
   
-  output$zoning_map <- renderPlot({
+  output$zoning_map <- renderPlotly({
     req(selected_zoning_county())
-    county_data <- filter(zoning, County == selected_zoning_county())
-    plot_county_zoning(county_data)
+    plot_county_zoning(zoning, county_selection = selected_zoning_county())
   })
 
 }
