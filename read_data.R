@@ -1,6 +1,31 @@
 
 ## FUNCTION TO READ IN CENSUS DATA AND RETURN ALL NECESSARY DFS ##
 
+census_variables <- data.frame(
+  code = c(
+    "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
+    "B19013_001E", "B19001_002E", "B19301_001E", "B17001_002E", "B25077_001E", "B25064_001E",
+    "B23025_002E", "B23025_005E", "B23006_002E", "B24011_001E",
+    "B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E",
+    "B25001_001E", "B25002_002E", "B25002_003E", "B25003_002E", "B25003_003E",
+    "B08006_001E", "B08006_003E", "B08006_008E", "B08013_001E",
+    "B27001_001E", "B27001_005E", "B27001_008E", "B27001_012E"
+  ),
+  title = c(
+    "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
+    "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population",
+    "Median Household Income", "Household Income Brackets", "Per Capita Income", "Population Below Poverty Level", 
+    "Median Home Value", "Median Gross Rent",
+    "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+    "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
+    "Total Housing Units", "Occupied Housing Units", "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units",
+    "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)",
+    "Total Population for Health Insurance Coverage", "Population with Public Health Insurance", 
+    "Population with Private Health Insurance", "Population with No Health Insurance"
+  ),
+  stringsAsFactors = FALSE
+) 
+
 get_census_variables <- function() {
   census_variables <- data.frame(
     code = c(
@@ -80,7 +105,7 @@ census_data <- function(year) {
       `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
       `Professional School Degree` = `Professional School Degree` / `Total Population`,
       `Doctorate Degree` = `Doctorate Degree` / `Total Population`,
-      `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
+      `Master's Degree` = `Master's Degree` / `Total Population`,
       `Workers Who Drive Alone` = `Workers Who Drive Alone` / `Total Workers`,
       `Workers Using Public Transport` = `Workers Using Public Transport` / `Total Workers`,
       `Occupied Housing Units` = `Occupied Housing Units` / `Total Housing Units`,

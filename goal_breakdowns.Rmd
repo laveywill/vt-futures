@@ -127,6 +127,10 @@ age_distribution_data(2023)
 
 
 ```{r}
+head(natl_census_data)
+```
+
+```{r}
 plot_age_distribution <- function(state_df, national_df) {
   # Shared age bucket and label formatting
   process_age_data <- function(df) {
