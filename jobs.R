@@ -233,7 +233,16 @@ plot_county_map_jobs <- function(df, county_col, show_diff) {
     geom_sf_label(label_aes) +
     geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
     fill_scale +
-    theme_void()
+    labs(title = paste0(county_col, "\n")) +
+    coord_sf(expand = FALSE) +
+    theme_void() + 
+    theme(
+      plot.title = element_text(size = 20, face = "bold", family = "Georgia", hjust = 0.5),
+      plot.margin = margin(5, 10, 5, 10),
+      legend.position="top",
+      legend.key.size = unit(0.5, "cm"),
+      legend.key.width = unit(3,"cm") 
+    )
   
   return(map)
 }

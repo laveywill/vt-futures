@@ -51,6 +51,7 @@ state <- census_data$state
 county <- census_data$county
 town <- census_data$place
 natl <- census_data$natl
+collierFL <- census_data$collierFL
 
 housing <- get_housing_data(year)
 zoning <- get_zoning_data()
@@ -61,6 +62,7 @@ dependency_df <- get_dependency_data(labor_force_df)
 
 state_age_data <- build_age_df(state)
 natl_age_data <- build_age_df(natl)
+collierFL_age_data <- build_age_df(collierFL)
 vt_map <- county_level_map(county)
 
 theme <- bs_theme(
@@ -129,7 +131,7 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("pop_county_map", height = "300px"),
+              plotOutput("pop_county_map", height = "500px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -238,7 +240,7 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("homes_county_map", click = "homes_map_click", height = "300px"),
+              plotOutput("homes_county_map", click = "homes_map_click", height = "500px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -307,7 +309,7 @@ ui <- page_fluid(
             ),
             layout_columns(
               col_widths = c(7, 5), 
-              plotOutput("jobs_county_map", height = "300px"),
+              plotOutput("jobs_county_map", height = "500px"),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -389,7 +391,7 @@ server <- function(input, output, session) {
   })
   
   output$age_plot <- renderPlot({
-    plot_age_distribution(state_age_data, natl_age_data)
+    plot_age_distribution(state_age_data, natl_age_data, collierFL_age_data)
   })
   
   output$county_plot <- renderPlot({
