@@ -5,7 +5,7 @@ source(paste0(pth, "/read_data.R"))
 
 # STATE LEVEL POPULATION DATA
 
-plot_age_distribution <- function(state_df, national_df) {
+plot_age_distribution <- function(state_df, national_df, compare_df) {
   process_age_data <- function(df) {
     df %>%
       mutate(
@@ -28,6 +28,7 @@ plot_age_distribution <- function(state_df, national_df) {
   }
   state_df <- process_age_data(state_df)
   national_df <- process_age_data(national_df)
+  compare_df <- process_age_data(compare_df)
   
   age_levels <- rev(c("85+", "80 - 84", "75 - 79", "70 - 74",
                       "65 - 69", "60 - 64", "55 - 59", "50 - 54",
@@ -36,24 +37,35 @@ plot_age_distribution <- function(state_df, national_df) {
                       "5 - 9", "Under 5"))
   state_df$age_label <- factor(state_df$age_label, levels = age_levels)
   national_df$age_label <- factor(national_df$age_label, levels = age_levels)
+  compare_df$age_label <- factor(compare_df$age_label, levels = age_levels)
   
-  # Scale US density to match size of vermont
-  scale_factor <- sum(state_df$total_population) / sum(national_df$total_population)
+  # Scale US/Collier FL density to match size of VT
+  scale_factor_us <- sum(state_df$total_population) / sum(national_df$total_population)
+  scale_factor_compare <- sum(state_df$total_population) / sum(compare_df$total_population)
   
   national_density <- national_df %>%
     mutate(age_numeric = as.numeric(age_label),
-           scaled_population = total_population * scale_factor) %>%
+           scaled_population = total_population * scale_factor_us) %>%
+    complete(age_label = age_levels, fill = list(`Total Population` = 0)) %>%
+    arrange(age_label)
+  
+  compare_density <- compare_df %>%
+    mutate(age_numeric = as.numeric(age_label),
+           scaled_population = total_population * scale_factor_compare) %>%
     complete(age_label = age_levels, fill = list(`Total Population` = 0)) %>%
     arrange(age_label)
   
   ggplot(state_df, aes(x = age_label, y = total_population, fill = age_bucket)) +
-    geom_bar(stat = "identity") +
-    geom_line(data = national_density, aes(x = age_label, y = scaled_population, group = 1),
-              color = "black", size = 1.2) +
+    geom_bar(stat = "identity",show.legend = FALSE) +
+    geom_line(data = national_density, aes(x = age_label, y = scaled_population, group = 1, color = "US (scaled)"),
+              size = 1.2) +
+    geom_line(data = compare_density, aes(x = age_label, y = scaled_population, group = 1, color = "Collier FL (scaled)"),
+              size = 1.2, linetype = 3) +
     labs(
       x = "Age Group", 
       y = "\nTotal Population", 
-      title = "Vermont Age Group Distribution (2023)"
+      title = "Vermont Age Group Distribution (2023)",
+      color = NULL
     ) +
     scale_y_continuous(labels = scales::comma) +
     scale_fill_manual(values = c(
@@ -63,9 +75,11 @@ plot_age_distribution <- function(state_df, national_df) {
       "50-64 years" = "orange", 
       "65+ years" = "red"
     )) +
+    scale_color_manual(values = c("US (scaled)" = "black", "Collier FL (scaled)" = "black")) +
     theme_minimal() +
     theme(
-      legend.position = "none", 
+      legend.position = "right",
+      legend.text = element_text(size = 12),
       text = element_text(family = "Georgia"),
       axis.title.x = element_text(size = 16, face = "bold"),
       axis.title.y = element_text(size = 16, face = "bold"),
@@ -179,13 +193,23 @@ plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
       )
     
     fill_aes <- aes(fill = diff)
-    label_aes <- aes(label = value_label)
+    label_aes <- aes(label = value_label) 
     
-    fill_scale <- scale_fill_viridis_c(name = NULL)
+    max_diff <- max(df$diff, na.rm = TRUE)
+    max_range <- max_diff + 0.2*max_diff
+    
+    min_diff <- min(df$diff, na.rm = TRUE)
+    min_range <- min_diff - 0.2*min_diff
+    
+    fill_scale <- scale_fill_viridis_c(name = "Difference from\nnational average", 
+                                       option = "D",
+                                       limits = c(min_range, max_range),
+                                       oob = scales::squish,
+                                       labels = if (is_percent) percent_format(accuracy = 0.01) else waiver())
   } else {
     df <- df %>%
       mutate(
-        value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else !!county_sym
+        value_label = if (is_percent) paste0(round(!!county_sym * 100, 2), "%") else scales::comma(!!county_sym)
       )
     
     fill_aes <- aes(fill = !!county_sym)
@@ -194,7 +218,7 @@ plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
     fill_scale <- scale_fill_gradient(
       low = "honeydew", high = "darkgreen",
       name = NULL, 
-      labels = if (is_percent) percent_format(accuracy = 0.01) else waiver()
+      labels = if (is_percent) percent_format(accuracy = 0.01) else scales::comma_format(accuracy = 1)
     )
   }
   

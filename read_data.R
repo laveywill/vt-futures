@@ -131,12 +131,25 @@ census_data <- function(year) {
       NAME = gsub(" city, Vermont", "", NAME),
     )
   
+  # Pull df for county in FL (age comparison)
+  county_census_data_collier_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code,  paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "county:021",
+    regionin = "state:12"
+  )
+  
+  county_census_data_collier <- county_census_data_collier_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+  
 
-  # Return all of the dataframes constructed
+  # Return all of the dataframes
   return(list(state = state_census_data, 
               county = county_census_data, 
               town = place_census_data,
-              natl = natl_census_data))
+              natl = natl_census_data,
+              collierFL = county_census_data_collier))
 }
 
 
