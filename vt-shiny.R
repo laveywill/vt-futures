@@ -206,6 +206,8 @@ ui <- page_fluid(
                   1980s relative to the needs of the population at the time. 
                   Vermont's current housing shortage is the result of decades of 
                   decelerating housing construction."),
+                p("Act 250 was passed in 1970"),
+                p("Less than 20% of Vermont's housing stock has been built in the last 20 years"),
                 checkboxInput("show_homes_county_view", "View by County", value = FALSE),
                 conditionalPanel(
                   condition = "input.show_homes_county_view == true",

@@ -457,9 +457,9 @@ get_housing_data <- function(year = 2023) {
   final_data <- tidy_data |>
     pivot_wider(names_from = Category, values_from = Count) |>
     mutate(
-      Vacant = Total - Owner - Renter
+      `Seasonal or Vacant` = Total - Owner - Renter
     ) |>
-    pivot_longer(cols = c(Owner, Renter, Vacant), names_to = "Tenure", values_to = "Count")
+    pivot_longer(cols = c(Owner, Renter, `Seasonal or Vacant`), names_to = "Tenure", values_to = "Count")
   
   final_data$Tenure <- fct_rev(final_data$Tenure)
   final_data$Year_Built <- fct_rev(final_data$Year_Built)

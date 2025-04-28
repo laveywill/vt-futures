@@ -33,11 +33,16 @@ plot_state_housing <- function(full_df) {
     ggplot() + 
     geom_bar(aes(x = Year_Built, y = Count, fill = Tenure), stat = "identity") +
     theme_minimal() +
-    labs(title = "Number of Housing Units by Year Built",
+    labs(title = "Estimated Housing Units by Year Structure Built",
          x = "Year Built",
          y = "Number of Units") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotate x-axis labels
-    coord_flip()
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    coord_flip() + 
+    scale_fill_manual(values = c(
+      "Owner" = "#00dca5",
+      "Renter" = "#18a0cd",
+      "Seasonal or Vacant" = "#c4c4c4"
+    ))
     
   return(p)
 }
