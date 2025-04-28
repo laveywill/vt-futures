@@ -16,6 +16,7 @@ library(rlang)
 library(forcats)
 library(data.table)
 library(plotly)
+library(geojsonsf)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -25,6 +26,7 @@ source(paste0(pth, "/homes.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+Sys.setenv(MAPBOX_TOKEN = "")
 year <- 2023
 state_fips <- 50
 
@@ -219,7 +221,6 @@ ui <- page_fluid(
                 )
               ),
               mainPanel(
-                p("Estimated Housing Units by Year Structure Built"),
                 plotOutput("home_plot", height = "600px")
               )
             )

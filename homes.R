@@ -17,7 +17,23 @@ plot_county_housing <- function(full_df, county_selection) {
          x = "Year Built",
          y = "Number of Units") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-    coord_flip(ylim = c(0, maximum)) 
+    coord_flip(ylim = c(0, maximum)) +
+    scale_fill_manual(values = c(
+      "Owner" = "#00dca5",
+      "Renter" = "#18a0cd",
+      "Seasonal or Vacant" = "#c4c4c4"
+    )) +
+    scale_y_continuous(labels = scales::comma) +
+    theme(
+      legend.position = "right",
+      legend.text = element_text(size = 12),
+      text = element_text(family = "Georgia"),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      axis.text.x = element_text(size = 14, face = "bold", angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 22, face = "bold")
+    )
   
   return(p)
 }
@@ -36,13 +52,23 @@ plot_state_housing <- function(full_df) {
     labs(title = "Estimated Housing Units by Year Structure Built",
          x = "Year Built",
          y = "Number of Units") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     coord_flip() + 
     scale_fill_manual(values = c(
       "Owner" = "#00dca5",
       "Renter" = "#18a0cd",
       "Seasonal or Vacant" = "#c4c4c4"
-    ))
+    )) + 
+    scale_y_continuous(labels = scales::comma) +
+    theme(
+      legend.position = "right",
+      legend.text = element_text(size = 12),
+      text = element_text(family = "Georgia"),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      axis.text.x = element_text(size = 14, face = "bold", angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 22, face = "bold")
+    )
     
   return(p)
 }
@@ -145,6 +171,9 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
 }
 
 plot_county_zoning <- function(zoning_df, county_selection) {
+  # input on the side panel to select the zoning_df column to view
+  # put all plots into a 3x1 grid of graphs, (state, click-down county, click-down town)
+  # convert to plotly graphs (adding in the streetview backgrounds)
   
   p <- zoning_df |> 
     filter(County == county_selection) |> 
@@ -153,6 +182,51 @@ plot_county_zoning <- function(zoning_df, county_selection) {
                 geometry = geometry))
   
     return(ggplotly(p))
+  
+  # centroid <- zoning_df |> 
+  #   filter(County == county_selection) |> 
+  #   st_as_sf() |> 
+  #   mutate(geometry = st_make_valid(geometry)) |> 
+  #   st_centroid() |> 
+  #   st_coordinates() |> 
+  #   colMeans()
+  
+  # Ensure `1F Allowance` is a factor for better color handling
+  zoning_df$`1F Allowance` <- as.factor(zoning_df$`1F Allowance`)
+  
+  zoning_df_clean <- zoning_df %>%
+    filter(!is.na(.[[selected_column]]))
+  
+  # Create a geojson object to pass into plot_ly (required for choropleth map)
+  zoning_geojson <- geojsonsf::sf_geojson(st_as_sf(zoning_df_clean))
+  
+  # Plot using choropleth
+  p <- plot_ly(
+    geojson = zoning_geojson,  # Pass the geojson object
+    type = "choropleth",       # Use choropleth for polygons
+    locations = ~zoning_df_clean$OBJECTID,  # Use rownames for unique IDs
+    color = ~as.numeric(zoning_df_clean[[selected_column]]),  # Dynamically color by selected column
+    colorscale = "Viridis",    # Set color scale
+    colorbar = list(title = selected_column),  # Set colorbar title dynamically
+    hoverinfo = "text",
+    text = ~paste("County:", zoning_df_clean[["County"]], "<br>", selected_column, ":", zoning_df_clean[[selected_column]])
+  )
+  
+  # Layout with OpenStreetMap style
+  p <- p |> layout(
+    geo = list(
+      scope = 'usa',  # Adjust scope to focus on your region (if needed)
+      projection = list(type = 'mercator'),  # Mercator projection
+      showland = TRUE,
+      landcolor = "white",
+      subunitcolor = "gray",
+      showlakes = TRUE,
+      lakecolor = "white"
+    ),
+    margin = list(l = 0, r = 0, t = 0, b = 0)  # Remove white margins
+  )
+  
+  p
 }
   
 
