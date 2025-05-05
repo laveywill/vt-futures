@@ -224,8 +224,8 @@ plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
   
   map <- ggplot(df) +
     geom_sf(fill_aes) +
-    geom_sf_label(label_aes) +
-    geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5) +
+    geom_sf_label(label_aes, check_overlap = T) +
+    geom_sf_label(aes(label = NAME), nudge_y = -0.1, size = 5.5, check_overlap = T) +
     fill_scale +
     labs(title = paste0(county_col, "\n")) +
     coord_sf(expand = FALSE) +
