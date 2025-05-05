@@ -13,7 +13,7 @@ plot_county_housing <- function(full_df, county_selection) {
     ggplot() + 
     geom_bar(aes(x = Year_Built, y = Count, fill = Tenure), stat = "identity") + 
     theme_minimal() + 
-    labs(title = paste("Number of Housing Units by Year Built in", county_selection),
+    labs(title = paste("Estimated Housing Units by Year Structure Built:", county_selection),
          x = "Year Built",
          y = "Number of Units") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
@@ -170,7 +170,7 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
   return(map)
 }
 
-plot_county_zoning <- function(zoning_df, county_selection) {
+plot_county_zoning <- function(zoning_df, county_selection, var_selected) {
   # input on the side panel to select the zoning_df column to view
   # put all plots into a 3x1 grid of graphs, (state, click-down county, click-down town)
   # convert to plotly graphs (adding in the streetview backgrounds)
@@ -178,7 +178,7 @@ plot_county_zoning <- function(zoning_df, county_selection) {
   p <- zoning_df |> 
     filter(County == county_selection) |> 
     ggplot() +
-    geom_sf(aes(fill = `1F Allowance`,
+    geom_sf(aes(fill = var_selected,
                 geometry = geometry))
   
     return(ggplotly(p))
