@@ -31,9 +31,13 @@ clean_scale_jobs <- function(job_opening_df) {
 }
 
 clean_scale_capacity <- function(county_caps_df) {
-  
-  
-  
+  county_caps_df <- county_caps_df %>%
+    mutate(goal_over_latency = pop_goal - latent_cap,
+           goal_over_school_latency = ( (pop_goal/2) * 1.89 ) - latent_cap_school,
+           goal_over_latency_scaled = scale(goal_over_latency),
+           goal_over_school_latency_scaled = scale(goal_over_school_latency)
+    ) 
+  return(county_caps_df)
 }
 
 clean_scale_zoning <- function(zoning_df) {
