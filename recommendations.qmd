@@ -4,3 +4,242 @@ format: html
 editor: visual
 ---
 
+```{r}
+census_variables <- data.frame(
+  code = c(
+    "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
+    "B19013_001E", "B19001_002E", "B19301_001E", "B17001_002E", "B25077_001E", "B25064_001E",
+    "B23025_002E", "B23025_005E", "B23006_002E", "B24011_001E",
+    "B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E",
+    "B25001_001E", "B25002_002E", "B25002_003E", "B25003_002E", "B25003_003E",
+    "B08006_001E", "B08006_003E", "B08006_008E", "B08013_001E",
+    "B27001_001E", "B27001_005E", "B27001_008E", "B27001_012E"
+  ),
+  title = c(
+    "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
+    "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population",
+    "Median Household Income", "Household Income Brackets", "Per Capita Income", "Population Below Poverty Level", 
+    "Median Home Value", "Median Gross Rent",
+    "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+    "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
+    "Total Housing Units", "Occupied Housing Units", "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units",
+    "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)",
+    "Total Population for Health Insurance Coverage", "Population with Public Health Insurance", 
+    "Population with Private Health Insurance", "Population with No Health Insurance"
+  ),
+  stringsAsFactors = FALSE
+) 
+
+get_census_variables <- function() {
+  census_variables <- data.frame(
+    code = c(
+      "B01003_001E", "B01002_001E", "B01001_002E", "B01001_026E", "B02001_002E", "B02001_003E", "B02001_005E", "B03001_003E",
+      "B19013_001E", "B19001_002E", "B19301_001E", "B17001_002E", "B25077_001E", "B25064_001E",
+      "B23025_002E", "B23025_005E", "B23006_002E", "B24011_001E",
+      "B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E",
+      "B25001_001E", "B25002_002E", "B25002_003E", "B25003_002E", "B25003_003E",
+      "B08006_001E", "B08006_003E", "B08006_008E", "B08013_001E",
+      "B27001_001E", "B27001_005E", "B27001_008E", "B27001_012E"
+    ),
+    title = c(
+      "Total Population", "Median Age", "Total Male Population", "Total Female Population", "White Alone", 
+      "Black or African American Alone", "Asian Alone", "Hispanic or Latino Population",
+      "Median Household Income", "Household Income Brackets", "Per Capita Income", "Population Below Poverty Level", 
+      "Median Home Value", "Median Gross Rent",
+      "Labor Force", "Unemployed Population", "Civilian Employed Population", "Industry for Civilian Employed Population",
+      "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
+      "Total Housing Units", "Occupied Housing Units", "Vacant Housing Units", "Owner-Occupied Housing Units", "Renter-Occupied Housing Units",
+      "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)",
+      "Total Population for Health Insurance Coverage", "Population with Public Health Insurance", 
+      "Population with Private Health Insurance", "Population with No Health Insurance"
+    ),
+    stringsAsFactors = FALSE
+  ) 
+  # do we want to include health insurance variables? we don't talk about them much in our recommendations
+  return(census_variables)
+}
+
+census_data <- function(year) {
+  Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+  
+  # Pull df at the national level
+  natl_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "us:1"
+  )
+  
+  natl_census_data <- natl_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+  
+  # Pull df at the state level
+  state_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "state:50",
+  )
+  
+  state_census_data <- state_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+  
+  # Pull df at the county level
+  county_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code),
+    region = "county:*",
+    regionin = "state:50",
+  ) 
+  
+  county_census_data <- county_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
+    mutate(
+      NAME = gsub(" County, Vermont", "", NAME),
+      `White Alone` = `White Alone` / `Total Population`,
+      `Black or African American Alone` = `Black or African American Alone` / `Total Population`,
+      `Asian Alone` = `Asian Alone` / `Total Population`,
+      `Hispanic or Latino Population` = `Hispanic or Latino Population` / `Total Population`,
+      `Total Male Population` = `Total Male Population` / `Total Population`,
+      `Total Female Population` = `Total Female Population` / `Total Population`,
+      `Labor Force` = `Labor Force` / `Total Population`,
+      `Unemployed Population` = `Unemployed Population` / `Total Population`,
+      `High School Graduate or Equivalent` = `High School Graduate or Equivalent` / `Total Population`,
+      `Bachelor's Degree` = `Bachelor's Degree` / `Total Population`,
+      `Professional School Degree` = `Professional School Degree` / `Total Population`,
+      `Doctorate Degree` = `Doctorate Degree` / `Total Population`,
+      `Master's Degree` = `Master's Degree` / `Total Population`,
+      `Workers Who Drive Alone` = `Workers Who Drive Alone` / `Total Workers`,
+      `Workers Using Public Transport` = `Workers Using Public Transport` / `Total Workers`,
+      `Occupied Housing Units` = `Occupied Housing Units` / `Total Housing Units`,
+      `Vacant Housing Units` = `Vacant Housing Units` / `Total Housing Units`,
+      `Owner-Occupied Housing Units` = `Owner-Occupied Housing Units` / `Total Housing Units`,
+      `Renter-Occupied Housing Units` = `Renter-Occupied Housing Units` / `Total Housing Units`
+    )
+  
+  # Pull df at the town ("place") level
+  place_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code),
+    region = "place:*",
+    regionin = "state:50",
+  )
+  
+  place_census_data <- place_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code)) |> 
+    mutate(
+      NAME = gsub(" village, Vermont", "", NAME),
+      NAME = gsub(" CDP, Vermont", "", NAME),
+      NAME = gsub(" city, Vermont", "", NAME),
+    )
+  
+  # Pull df for county in FL (age comparison)
+  county_census_data_collier_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = c("NAME", census_variables$code,  paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "county:021",
+    regionin = "state:12"
+  )
+  
+  county_census_data_collier <- county_census_data_collier_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+  
+
+  # Return all of the dataframes
+  return(list(state = state_census_data, 
+              county = county_census_data, 
+              town = place_census_data,
+              natl = natl_census_data,
+              collierFL = county_census_data_collier))
+}
+```
+
+```{r}
+build_county_caps_df <- function() {
+  pop <- getCensus(
+    name = "acs/acs5",
+    vintage = 2020,
+    vars = c("NAME", "B01001_001E"),
+    region = "county:*",
+    regionin = "state:50"
+  )  
+  vt_pop <- sum(pop$B01001_001E)
+  
+  pop <- pop %>% 
+    rename( "population" = "B01001_001E") %>%
+    mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
+           County = str_trim(str_remove(NAME, "County, Vermont"))
+    ) %>% select(County, pop_goal)
+  
+  latent_cap <- 
+    read_csv(paste0(pth, "/data/latent-capacity.csv"), show_col_types = F) %>%
+    rename(latent_cap = `Latent Capacity`) %>%
+    group_by(County) %>%
+    summarise(latent_cap = sum(latent_cap))
+  
+  jobs_homes <- 
+    read_csv(paste0(pth, "/data/JobsHomesMap_data_formatted.csv"), name_repair = make.names) %>%
+    drop_na() %>%
+    rename(jobs_homes_index = Jobs.Homes.Index) %>%
+    group_by(County) %>%
+    summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
+    mutate(County = str_trim(str_remove(County, "County")))
+  
+  school_latency <- 
+    read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
+    mutate(latent_cap_school = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
+    distinct(County, school_district, latent_cap_school) %>% 
+    group_by(County) %>%
+    summarise(latent_cap_school = sum(latent_cap_school))  
+  
+  # Merge all datasets
+  county_caps <- 
+    left_join(latent_cap, jobs_homes, by = "County") %>%
+    left_join(school_latency, by = "County") %>%
+    left_join(pop, by = "County") %>% select (
+      County, pop_goal, latent_cap, jobs_homes_index, latent_cap_school
+    ) %>% 
+    drop_na() 
+  return(county_caps)
+}
+```
+
+```{r}
+pth <- getwd()
+source(paste0(pth, "/read_data.R"))
+county_caps <- build_county_caps_df()
+```
+
+```{r}
+county_caps <- county_caps %>%
+  mutate(goal_over_latency = pop_goal - latent_cap,
+         goal_over_school_latency = ( (pop_goal/2) * 1.89 ) - latent_cap_school,
+         goal_over_latency_scaled = normalize(goal_over_latency, range = c(-1,1))
+         ) 
+county_caps
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

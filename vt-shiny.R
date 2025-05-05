@@ -83,8 +83,17 @@ theme <- bs_theme(
 
 ui <- page_fluid(
   theme = theme,
+  
+  # titlePanel(HTML("<center>Centered Heading Text</center>")),
+  
   card(
+    height = 100,
     card_header(class = "bg-primary", "Vermont Futures Project: Interactive Dashboard"),
+    card_image(
+      file = "favicon-vt-futures.jpg",
+      alt = "VT Futures Logo",
+      href = "https://vtfuturesproject.org/"
+    ),
     card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
   ),
   
