@@ -2,12 +2,12 @@
 create_scaled_df <- function(weights, county_caps_df, zoning_df, job_opening_df) {
   
   zoning_clean <- clean_scale_zoning(zoning_df)
-  county_cap_clean <- clean_scale_capacity(couty_caps_df)
+  county_cap_clean <- clean_scale_capacity(county_caps_df)
   jobs_clean <- clean_scale_jobs(job_opening_df)
   
   # Combine dataframes
-  joined_df <- left_join(county_cap_clean, zoning_clean, by = "County") |> 
-    left_join(., jobs_clean, by = "County") 
+  joined_df <- left_join(county_cap_clean, zoning_clean, by = "County")
+  joined_df <- left_join(joined_df, jobs_clean, by = "County")
   
   county <- joined_df[,1]
   metrics <- joined_df[,2:length(names(joined_df))]
@@ -23,7 +23,7 @@ clean_scale_jobs <- function(job_opening_df) {
   
   out <- job_opening_df |> 
     mutate(job_opening_score = scale(job_opening_rate),
-           County = toupper(county)) |> 
+           County = str_to_title(county)) |> 
     select(c("job_opening_score", "County"))
   
   return(out)
@@ -36,7 +36,8 @@ clean_scale_capacity <- function(county_caps_df) {
            goal_over_school_latency = ( (pop_goal/2) * 1.89 ) - latent_cap_school,
            goal_over_latency_scaled = scale(goal_over_latency),
            goal_over_school_latency_scaled = scale(goal_over_school_latency)
-    ) 
+    ) |> 
+    select(c("County", "goal_over_latency_scaled", "goal_over_school_latency_scaled"))
   return(county_caps_df)
 }
 

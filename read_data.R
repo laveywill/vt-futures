@@ -508,7 +508,7 @@ get_job_openings_data <- function() {
 
 
 get_county_job_openings_data <- function() {
-  readRDS("~/Desktop/Math 118/vt-futures/data/county_job_opening.rds")
+  readRDS(paste0(pth, "/data/county_job_opening.rds"))
 }
 
 
