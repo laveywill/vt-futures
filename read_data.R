@@ -380,8 +380,8 @@ get_lf_data <- function() {
       values_to = "labor_force_count"
     )
   
-  cleaned_age_distribution <- left_join(pivoted_binned_age_df, pivoted_binned_lf_age_df, by = c("NAME", "age_group")) |> 
-    mutate_if(is.numeric,coalesce,0)
+  cleaned_age_distribution <- left_join(pivoted_binned_age_df, pivoted_binned_lf_age_df, by = c("NAME", "age_group")) |>
+    mutate(labor_force_count = if_else(is.na(labor_force_count), 0, labor_force_count))
   
   return(cleaned_age_distribution)
 }
