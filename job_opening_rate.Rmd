@@ -1,0 +1,169 @@
+---
+title: "Untitled"
+author: "Eujin Chae"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library("readxl")
+library(dplyr)
+library(tidyr)
+
+national_total_employment <- read_excel("/Users/eujinchae/Downloads/SeriesReport-20250427155333_253620.xlsx", skip = 12)
+
+national_openings <- read_excel("/Users/eujinchae/Downloads/SeriesReport-20250427145716_d40f32.xlsx", skip = 12)
+
+vt_total_employment <- read_excel("/Users/eujinchae/Downloads/SeriesReport-20250427160324_e92654.xlsx", skip = 12)
+vt_openings <- read_excel("/Users/eujinchae/Downloads/SeriesReport-20250427150652_c99188.xlsx", skip = 12)
+
+
+national_openings <- national_openings %>% 
+  head(11) %>% 
+  pivot_longer(cols = Jan:Dec,
+               names_to = "Month",
+               values_to = "job_openings")
+
+national_total_employment <- national_total_employment %>% 
+  head(11) %>% 
+  pivot_longer(cols = Jan:Dec,
+               names_to = "Month",
+               values_to = "tot_employment")
+
+joined_national <- left_join(national_openings, national_total_employment, by = c("Year", "Month")) %>% group_by(Year) %>% 
+  mutate(job_opening_rate = (job_openings/(job_openings + tot_employment)*100)) %>% 
+  select(job_opening_rate, Month) %>% 
+  rename(national_job_opening_rate = job_opening_rate) 
+
+
+vt_openings <-  vt_openings %>% 
+  head(11) %>% 
+  pivot_longer(cols = Jan:Dec,
+               names_to = "Month",
+               values_to = "job_openings")
+
+vt_total_employment <- vt_total_employment %>% 
+  head(11) %>% 
+  pivot_longer(cols = Jan:Dec,
+               names_to = "Month",
+               values_to = "tot_employment")
+
+joined_vt <- left_join(vt_openings, vt_total_employment, by = c("Year", "Month")) %>% 
+  group_by(Year) %>% 
+  mutate(job_opening_rate = (job_openings/(job_openings + tot_employment)*100)) %>% 
+  select(job_opening_rate, Month) %>% 
+  rename(vt_job_opening_rate = job_opening_rate)
+  
+```
+
+
+```{r}
+national_vt_joined <- left_join(joined_national, joined_vt, by = c("Year", "Month"))
+
+
+job_openings <- national_vt_joined %>%
+  mutate(
+    Month = match(Month, month.abb),  
+    date = as.Date(paste(Year, Month, "01", sep = "-"))
+  ) %>% 
+  filter(Year >= 2017 & Year <= 2025)
+
+
+job_openings_long <- job_openings %>%
+  pivot_longer(
+    cols = c(national_job_opening_rate, vt_job_opening_rate),
+    names_to = "Region",
+    values_to = "OpeningRate"
+  )
+
+
+job_openings_long <- job_openings_long %>%
+  mutate(
+    Region = case_when(
+      Region == "national_job_opening_rate" ~ "United States",
+      Region == "vt_job_opening_rate" ~ "Vermont"
+    )
+  )
+```
+
+
+
+```{r}
+library(ggplot2)
+ggplot(job_openings_long, aes(x = date, y = OpeningRate, color = Region, linetype = Region)) +
+  geom_line(size = 1) +
+  scale_color_manual(values = c("Vermont" = "darkgreen", "United States" = "orange")) +
+  scale_linetype_manual(values = c("Vermont" = "solid", "United States" = "dashed")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_x_date(
+  date_breaks = "6 months",          
+  date_labels = "%b\n%Y"   
+)+
+  labs(
+    title = "Job Opening Rate: Vermont vs US",
+    x = NULL, 
+    y = NULL, 
+    color = NULL,
+    linetype = NULL,
+    caption = "Note: The job openings rate is computed by dividing the number of job openings\nby the sum of employment and job openings and multiplying that quotient by 100.\nSource: U.S. Bureau of Labor Statistics."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.caption = element_text(size = 7, hjust = 0, margin = margin(t = 10)),
+    legend.position = "top"
+  )
+```
+
+
+```{r}
+county_job_opening <- read_csv("/Users/eujinchae/Downloads/vt_futures(Sheet1).csv")
+
+county_job_opening <- county_job_opening %>% 
+  mutate(adjusted_job_openings = round(job_openings / 0.3)) %>% 
+  mutate(job_opening_rate = (adjusted_job_openings/(adjusted_job_openings+employment))*100) %>% 
+  select(county, job_opening_rate)
+
+
+write.csv(county_job_opening, "/Users/eujinchae/Downloads/county_job_opening.csv", row.names = FALSE)
+```
+
+
+
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+
+county_job_opening <- county_job_opening %>%
+  mutate(county = tolower(county))
+
+
+hex_coords <- data.frame(
+  county = c("addison", "bennington", "caledonia", "chittenden", "essex",
+             "franklin", "grand isle", "lamoille", "orange", "orleans",
+             "rutland", "washington", "windham", "windsor"),
+  x = c(2, 1, 4, 3, 5, 2, 1, 3, 3, 3, 4, 1, 2, 2),
+  y = c(3, 2, 5, 4, 6, 5, 4, 5, 6, 3, 6, 1, 4, 2)
+)
+
+
+plot_data <- left_join(county_job_opening, hex_coords, by = "county")
+
+# Plot hex map
+ggplot(plot_data, aes(x = x, y = y)) +
+  geom_tile(aes(fill = job_opening_rate), color = "white", width = 0.95, height = 0.95) +
+  geom_text(aes(label = toupper(substr(county, 1, 3))), color = "white", size = 3) +
+  scale_fill_gradient(low = "#e0d4f7", high = "#3b1f5a") +
+  coord_fixed() +
+  theme_void() +
+  labs(title = "Vermont County Job Opening Rate", fill = "Job Opening Rate") +
+  theme(legend.position = "bottom")
+
+
+```
+
+write.csv(job_openings_long, "~/Desktop/Math 118/vt-futures/data/job_openings_long.csv", row.names = FALSE)

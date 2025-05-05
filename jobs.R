@@ -141,7 +141,7 @@ plot_dependency_ratio <- function(dependency_df) {
     geom_col(width = 0.7) +
     geom_text(aes(label = sprintf("%.2f", dependency_ratio)), 
               hjust = -0.1, 
-              size = 3, 
+              size = 4, 
               color = "black") +
     coord_flip() +
     labs(
@@ -156,8 +156,8 @@ plot_dependency_ratio <- function(dependency_df) {
     theme_minimal(base_size = 12) +
     theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 19 ),
-      axis.text.x = element_text(color = "black"),
-      axis.text.y = element_text(color = "black"),
+      axis.text.x = element_text(color = "black", size = 10),
+      axis.text.y = element_text(color = "black", size = 10),
       plot.caption = element_text(hjust = 0, size = 8),
       legend.position = "none"
     )
@@ -247,3 +247,30 @@ plot_county_map_jobs <- function(df, county_col, show_diff) {
   return(map)
 }
 
+plot_job_opening_rate <- function(job_openings_long) {
+  ggplot(job_openings_long, aes(x = date, y = OpeningRate, color = Region, linetype = Region)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = c("Vermont" = "darkgreen", "United States" = "orange")) +
+    scale_linetype_manual(values = c("Vermont" = "solid", "United States" = "dashed")) +
+    scale_y_continuous(labels = percent_format(scale = 1)) +
+    scale_x_date(
+      date_breaks = "6 months",
+      date_labels = "%b\n%Y"
+    ) +
+    labs(
+      title = "Job Opening Rate: Vermont vs US",
+      x = NULL,
+      y = NULL,
+      color = NULL,
+      linetype = NULL,
+      caption = "Note: The job openings rate is computed by dividing the number of job openings\nby the sum of employment and job openings and multiplying that quotient by 100.\nSource: U.S. Bureau of Labor Statistics."
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      plot.caption = element_text(size = 10, hjust = 0, margin = margin(t = 10)),
+      legend.position = "top",
+      axis.text.x = element_text(size = 10),  
+      axis.text.y = element_text(size = 10)
+    )
+}

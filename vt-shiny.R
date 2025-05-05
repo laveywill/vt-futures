@@ -61,6 +61,7 @@ zoning <- get_zoning_data()
 labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
 dependency_df <- get_dependency_data(labor_force_df)
+job_opening_df <- get_job_openings_data()
 
 state_age_data <- build_age_df(state)
 natl_age_data <- build_age_df(natl)
@@ -343,6 +344,13 @@ ui <- page_fluid(
               )
             )
           )
+        ),
+        
+        card(
+          card_header(class = "bg-primary", "Job Openings"),
+          card_body(
+            plotOutput("job_opening_plot", height = "600px")
+          )
         )
       )
     )
@@ -465,6 +473,11 @@ server <- function(input, output, session) {
   output$zoning_map <- renderPlotly({
     req(selected_zoning_county())
     plot_county_zoning(zoning, county_selection = selected_zoning_county())
+  })
+  
+  
+  output$job_opening_plot <- renderPlot({
+    plot_job_opening_rate(job_opening_df)
   })
 
 }

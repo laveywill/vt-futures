@@ -495,3 +495,13 @@ get_zoning_data <- function() {
   
   return(out)
 }
+
+get_job_openings_data <- function() {
+  
+  directory_path <- paste0(pth, "/data/job_openings_long.csv")
+  
+  out <- read.csv(directory_path) %>% 
+    mutate(date = as.Date(date, format = "%Y-%m-%d"))
+  
+  return(out)
+}
