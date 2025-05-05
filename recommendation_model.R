@@ -1,9 +1,9 @@
 
-create_scaled_df <- function(weights, county_caps_df, zoning_df, jobs_df) {
+create_scaled_df <- function(weights, county_caps_df, zoning_df, job_opening_df) {
   
   zoning_clean <- clean_scale_zoning(zoning_df)
   county_cap_clean <- clean_scale_capacity(couty_caps_df)
-  jobs_clean <- clean_scale_jobs(jobs_df)
+  jobs_clean <- clean_scale_jobs(job_opening_df)
   
   # Combine dataframes
   joined_df <- left_join(county_cap_clean, zoning_clean, by = "County") |> 
@@ -19,6 +19,17 @@ create_scaled_df <- function(weights, county_caps_df, zoning_df, jobs_df) {
 }
 
 
+clean_scale_jobs <- function(job_opening_df) {
+  
+  out <- job_opening_df |> 
+    mutate(job_opening_score = scale(job_opening_rate),
+           County = toupper(county)) |> 
+    select(c("job_opening_score", "County"))
+  
+  return(out)
+  
+}
+
 clean_scale_capacity <- function(county_caps_df) {
   
   
@@ -27,7 +38,7 @@ clean_scale_capacity <- function(county_caps_df) {
 
 clean_scale_zoning <- function(zoning_df) {
   
-  zoning_clean <- zoning_df |> 
+  zoning_clean <- zoning |> 
     select(c("County", "District Name",
              "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance",
              "Shape_Area", "Acres", "geometry"))
@@ -52,7 +63,10 @@ clean_scale_zoning <- function(zoning_df) {
       housing_score = 1*`1F Allowance` + 2*`2F Allowance` + 3*`3F Allowance` + 4*`4F Allowance` + 5*`5F Allowance`
     ) |> 
     summarize(
-      score = sum(housing_score),
+      zoning_score = sum(housing_score)
     ) |> 
-    ungroup()
+    ungroup() |> 
+    mutate(zoning_score = scale(zoning_score))
+  
+  return(final)
 }

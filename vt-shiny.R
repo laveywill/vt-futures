@@ -66,6 +66,7 @@ labor_force_df <- get_lf_data()
 prime_age_df <- get_prime_age_data(labor_force_df)
 dependency_df <- get_dependency_data(labor_force_df)
 job_opening_df <- get_job_openings_data()
+county_job_opening_df <- get_county_job_openings_data()
 
 state_age_data <- build_age_df(state)
 natl_age_data <- build_age_df(natl)
