@@ -505,3 +505,10 @@ get_job_openings_data <- function() {
   
   return(out)
 }
+
+
+get_county_job_openings_data <- function() {
+  readRDS("~/Desktop/Math 118/vt-futures/data/county_job_opening.rds")
+}
+
+
