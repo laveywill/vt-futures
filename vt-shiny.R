@@ -46,6 +46,10 @@ jobs_variables = c(
   "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
 )
 
+zoning_variables = c(
+  "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance"
+)
+
 #### Read in data ####
 census_variables <- get_census_variables()
 census_data <- census_data(year)
@@ -239,11 +243,7 @@ ui <- page_fluid(
               conditionalPanel(
                 condition = "input.homes_var_col != 'Total Housing Units'",
                 checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              )
-            ),
-            layout_columns(
-              col_widths = c(7, 5), 
-              plotOutput("homes_county_map", click = "homes_map_click", height = "500px"),
+              ),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -254,10 +254,19 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
                 div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
               )
-            ), 
+            ),
+            plotOutput("homes_county_map", click = "homes_map_click", height = "500px"),
             conditionalPanel(
               condition = "output.zoning_county_selected",
-              plotlyOutput("zoning_map")
+              layout_columns(
+                col_widths = c(10, 2),
+                plotlyOutput("zoning_map"),
+                selectInput(
+                  "zoning_var_col",
+                  label = "Select a Variable to Explore",
+                  choices = zoning_variables
+                )
+              )
             )
           )
         ),
@@ -464,7 +473,11 @@ server <- function(input, output, session) {
   
   output$zoning_map <- renderPlotly({
     req(selected_zoning_county())
-    plot_county_zoning(zoning, county_selection = selected_zoning_county())
+    plot_county_zoning(
+      zoning, 
+      county_selection = selected_zoning_county(), 
+      var_selected = input$zoning_var_col
+    )
   })
 
 }
