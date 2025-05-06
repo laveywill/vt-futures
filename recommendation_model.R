@@ -9,11 +9,11 @@ create_scaled_df <- function(weights, county_caps_df, zoning_df, job_opening_df)
   joined_df <- left_join(county_cap_clean, zoning_clean, by = "County")
   joined_df <- left_join(joined_df, jobs_clean, by = "County")
   
-  county <- joined_df[,1]
+  county_vec <- joined_df[,1]
   metrics <- joined_df[,2:length(names(joined_df))]
   
-  out <- data.frame(mapply("*", joined_df, weights)) |> 
-    cbind(county, .)
+  out <- data.frame(county = county_vec,
+                    score = rowSums(mapply("*", metrics, weights)))
     
   return(out)
 }
