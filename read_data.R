@@ -511,4 +511,8 @@ get_county_job_openings_data <- function() {
   readRDS(paste0(pth, "/data/county_job_opening.rds"))
 }
 
+get_rank_data <- function() {
+  readRDS(paste0(pth, "/data/rank_df.rds"))
+}
+
 
