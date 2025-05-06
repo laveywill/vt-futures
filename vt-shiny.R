@@ -84,18 +84,8 @@ theme <- bs_theme(
 
 ui <- page_fluid(
   theme = theme,
-  
-  # titlePanel(HTML("<center>Centered Heading Text</center>")),
-  
   card(
-    height = 100,
     card_header(class = "bg-primary", "Vermont Futures Project: Interactive Dashboard"),
-    card_image(
-      file = "favicon-vt-futures.jpg",
-      alt = "VT Futures Logo",
-      href = "https://vtfuturesproject.org/",
-      max_height = 100
-    ),
     card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
   ),
   
@@ -371,6 +361,12 @@ ui <- page_fluid(
           card_body(
             plotOutput("job_opening_plot", height = "600px")
           )
+        ), 
+        card(
+          card_header(class = "bg-primary", "County Job Openings"),
+          card_body(
+            plotOutput("county_job_opening_plot", height = "600px")
+          )
         )
       )
     )
@@ -502,6 +498,10 @@ server <- function(input, output, session) {
   
   output$job_opening_plot <- renderPlot({
     plot_job_opening_rate(job_opening_df)
+  })
+  
+  output$county_job_opening_plot <- renderPlot({
+    plot_county_job_opening(county_job_opening_df)
   })
 
 }
