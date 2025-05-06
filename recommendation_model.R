@@ -1,19 +1,35 @@
 
-create_scaled_df <- function(weights, county_caps_df, zoning_df, job_opening_df) {
+create_scaled_df <- function(weights, goal = 802000, curr_pop = 647464,
+                             county_caps_df, zoning_df, county_job_opening_df) {
+  
+  goal_increase <- goal - curr_pop
   
   zoning_clean <- clean_scale_zoning(zoning_df)
   county_cap_clean <- clean_scale_capacity(county_caps_df)
-  jobs_clean <- clean_scale_jobs(job_opening_df)
+  jobs_clean <- clean_scale_jobs(county_job_opening_df)
   
-  # Combine dataframes
-  joined_df <- left_join(county_cap_clean, zoning_clean, by = "County")
-  joined_df <- left_join(joined_df, jobs_clean, by = "County")
+  # Combine data frames
+  joined_df <- left_join(county_cap_clean, zoning_clean, by = "County") |> 
+    left_join(jobs_clean, by = "County")
   
-  county_vec <- joined_df[,1]
-  metrics <- joined_df[,2:length(names(joined_df))]
+  county_cols <- joined_df |> select("County", "pop_goal", "population", "proportion")
+  metrics <- joined_df[,5:length(names(joined_df))]
   
-  out <- data.frame(county = county_vec,
+  scored <- data.frame(county = county_cols,
                     score = rowSums(mapply("*", metrics, weights)))
+  
+  fx <- function(x) {
+    (1/6) * x + 1
+  }
+  
+  out <- scored |> 
+    mutate(
+      scaled_score = fx(score),
+      adjusted_pop = scaled_score * (county.proportion*goal_increase),
+      adj_pop_proportion = adjusted_pop / sum(adjusted_pop),
+      rescaled_pop = floor(goal_increase * adj_pop_proportion)
+    )
+    
     
   return(out)
 }
@@ -35,9 +51,10 @@ clean_scale_capacity <- function(county_caps_df) {
     mutate(goal_over_latency = pop_goal - latent_cap,
            goal_over_school_latency = ( (pop_goal/2) * 1.89 ) - latent_cap_school,
            goal_over_latency_scaled = scale(goal_over_latency),
-           goal_over_school_latency_scaled = scale(goal_over_school_latency)
+           goal_over_school_latency_scaled = scale(goal_over_school_latency),
+           proportion = population / sum(population)
     ) |> 
-    select(c("County", "goal_over_latency_scaled", "goal_over_school_latency_scaled"))
+    select(c("County", "pop_goal", "population", "proportion", "goal_over_latency_scaled", "goal_over_school_latency_scaled"))
   return(county_caps_df)
 }
 

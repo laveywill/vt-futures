@@ -93,7 +93,8 @@ ui <- page_fluid(
     card_image(
       file = "favicon-vt-futures.jpg",
       alt = "VT Futures Logo",
-      href = "https://vtfuturesproject.org/"
+      href = "https://vtfuturesproject.org/",
+      max_height = 100
     ),
     card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
   ),
