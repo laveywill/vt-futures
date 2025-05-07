@@ -102,18 +102,6 @@ theme <- bs_theme(
 
 ui <- page_fluid(
   theme = theme,
-<<<<<<< Updated upstream
-  
-  card(
-    height = 100,
-    card_header(class = "bg-primary", "Vermont Futures Project: Interactive Dashboard"),
-    card_image(
-      file = "favicon-vt-futures.jpg",
-      alt = "VT Futures Logo",
-      href = "https://vtfuturesproject.org/"
-    ),
-    card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
-=======
   card(
     card_header(
       class = "bg-primary",
@@ -122,7 +110,6 @@ ui <- page_fluid(
         "Vermont Futures Project: Interactive Dashboard"
       )
     )
->>>>>>> Stashed changes
   ),
   navset_card_pill(
     nav_panel("Home Page",
@@ -138,7 +125,7 @@ ui <- page_fluid(
   card(
     style = "width: 250px; height: 250px;",
     card_image(
-      file = "midd_math_stat.jpg",
+      file = "midd_math_stat.png",
       href = "https://www.middlebury.edu/college/academics/mathematics"
     )
   )
@@ -188,6 +175,7 @@ ui <- page_fluid(
           card_header(class = "bg-primary", "County Level Exploration"),
           layout_sidebar(
             sidebar = sidebar(
+              width = 425,
               bg = "lightgrey",
               selectInput(
                 "pop_var_col", 
@@ -197,11 +185,7 @@ ui <- page_fluid(
               conditionalPanel(
                 condition = "input.pop_var_col != 'Total Population'",
                 checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              )
-            ),
-            layout_columns(
-              col_widths = c(7, 5), 
-              plotOutput("pop_county_map", height = "500px"),
+              ),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
@@ -213,7 +197,8 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Asian population:"), "7%"),
                 div(class = "mb-2", strong("Hispanic or Latino population:"), "19%")
               )
-            )
+            ),
+              plotOutput("pop_county_map", height = "500px")
           )
         ),
         card(
@@ -298,6 +283,7 @@ ui <- page_fluid(
           card_header(class = "bg-primary", "County Level Exploration"),
           layout_sidebar(
             sidebar = sidebar(
+              width = 425,
               bg = "lightgrey",
               selectInput(
                 "homes_var_col", 
@@ -372,6 +358,7 @@ ui <- page_fluid(
           card_header(class = "bg-primary", "County Level Exploration"),
           layout_sidebar(
             sidebar = sidebar(
+              width = 425,
               bg = "lightgrey",
               selectInput(
                 "jobs_var_col", 
@@ -381,15 +368,10 @@ ui <- page_fluid(
               conditionalPanel(
                 condition = "input.jobs_var_col != `Labor Force`",
                 checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              )
-            ),
-            layout_columns(
-              col_widths = c(7, 5), 
-              plotOutput("jobs_county_map", height = "500px"),
+              ),
               card(
                 class = "bg-light p-3 shadow-sm",
                 card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Labor Force:"), "X%"),
                 div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
                 div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
                 div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
@@ -401,7 +383,8 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
                 div(class = "mb-2", "*indicates highest level of education at this level"),
               )
-            )
+            ),
+              plotOutput("jobs_county_map", height = "500px")
           )
         ),
         card(

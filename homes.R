@@ -131,7 +131,26 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
     fill_aes <- aes(fill = diff)
     label_aes <- aes(label = value_label)
     
-    fill_scale <- scale_fill_viridis_c(name = NULL)
+    max_diff <- max(df$diff, na.rm = TRUE)
+    max_range <- max_diff + 0.2*max_diff
+    
+    min_diff <- min(df$diff, na.rm = TRUE)
+    min_range <- min_diff - 0.2*min_diff
+    
+    fill_scale <- scale_fill_viridis_c(
+      name = "Difference from\nnational average", 
+      option = "D",
+      limits = c(min_range, max_range),
+      oob = scales::squish,
+      labels = if (is_percent) {
+        percent_format(accuracy = 0.01)
+      } else if (is_dollar) {
+        dollar
+      } else {
+        waiver()
+      }
+    )
+    
     } else {
       df <- df %>%
         mutate(value_label = case_when(
