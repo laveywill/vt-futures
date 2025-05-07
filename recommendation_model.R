@@ -1,5 +1,6 @@
 
-create_scaled_df <- function(weights, goal = 802000, curr_pop = 647464,
+create_scaled_df <- function(weights = c(0.25, 0.25, 0.25, 0.25), 
+                             goal = 802000, curr_pop = 647464,
                              county_caps_df, zoning_df, county_job_opening_df) {
   
   goal_increase <- goal - curr_pop

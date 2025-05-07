@@ -23,6 +23,7 @@ source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
 source(paste0(pth, "/homes.R"))
+source(paste0(pth, "/recommendation_model.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
