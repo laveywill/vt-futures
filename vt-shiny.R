@@ -17,6 +17,7 @@ library(forcats)
 library(data.table)
 library(plotly)
 library(geojsonsf)
+library(purrr)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -71,6 +72,7 @@ county_job_opening_df <- get_county_job_openings_data()
 rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
+county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 vt_map <- county_level_map(county)
@@ -116,8 +118,16 @@ ui <- page_fluid(
           childcare, dining, repairs, and healthcare."),
                 p("Growing the prime working-age population is essential to closing the 
           workforce gap, improving affordability, and strengthening communities 
-          to better meet the needs of all Vermonters.")
+          to better meet the needs of all Vermonters."),
+                checkboxInput("show_pop_county_view", "View by County", value = FALSE),
+                conditionalPanel(
+                  condition = "input.show_pop_county_view == true",
+                  selectInput("selected_pop_county", "Select a County",
+                              choices = unique(county_age_data$NAME),
+                              selected = NULL)
+                )
               ),
+              
               mainPanel(
                 plotOutput("age_plot", height = "600px")
               )
@@ -421,7 +431,13 @@ server <- function(input, output, session) {
   })
   
   output$age_plot <- renderPlot({
-    plot_age_distribution(state_age_data, natl_age_data, collierFL_age_data)
+    view_county <- isTRUE(input$show_pop_county_view)
+    
+    if (view_county) {
+      plot_county_age_distribution(input$selected_pop_county, county_age_data, natl_age_data, collierFL_age_data)
+    } else {
+      plot_age_distribution(state_age_data, natl_age_data, collierFL_age_data)
+    }
   })
   
   output$county_plot <- renderPlot({
@@ -433,7 +449,6 @@ server <- function(input, output, session) {
   })
   
   output$home_plot <- renderPlot({
-    
     view_county <- isTRUE(input$show_homes_county_view)
     
     if (view_county) {
