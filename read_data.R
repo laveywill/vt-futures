@@ -84,7 +84,7 @@ census_data <- function(year) {
   county_census_data_raw <- getCensus(
     name = "acs/acs5",
     vintage = year,
-    vars = c("NAME", census_variables$code),
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
     region = "county:*",
     regionin = "state:50",
   ) 
@@ -225,7 +225,7 @@ build_county_caps_df <- function() {
     rename( "population" = "B01001_001E") %>%
     mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
            County = str_trim(str_remove(NAME, "County, Vermont"))
-    ) %>% select(County, pop_goal)
+    ) %>% select(County, population, pop_goal)
   
   latent_cap <- 
     read_csv(paste0(pth, "/data/latent-capacity.csv"), show_col_types = F) %>%
@@ -253,7 +253,7 @@ build_county_caps_df <- function() {
     left_join(latent_cap, jobs_homes, by = "County") %>%
     left_join(school_latency, by = "County") %>%
     left_join(pop, by = "County") %>% select (
-      County, pop_goal, latent_cap, jobs_homes_index, latent_cap_school
+      County, pop_goal, population, latent_cap, jobs_homes_index, latent_cap_school
     ) %>% 
     drop_na() 
   return(county_caps)
@@ -511,4 +511,50 @@ get_county_job_openings_data <- function() {
   readRDS(paste0(pth, "/data/county_job_opening.rds"))
 }
 
+get_rank_data <- function() {
+  readRDS(paste0(pth, "/data/rank_df.rds"))
+}
+
+build_county_age_df <- function(df) {
+
+  age <- df %>%
+    select(NAME, starts_with("B01001_")) |> 
+    pivot_longer(
+      cols = -NAME,
+      names_to = "age_group",
+      values_to = "population"
+    ) 
+
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  proc <- age |> 
+    mutate(age_group = map_chr(age_group, function(code) {
+      matched <- keep(age_group_patterns, ~ str_detect(code, .x))
+      if (length(matched) > 0) names(matched)[1] else NA_character_
+    })) |> 
+    group_by(NAME, age_group) |> 
+    summarize(total_population = sum(population, na.rm = TRUE), .groups = "drop_last")
+  
+  return(proc)
+}
 

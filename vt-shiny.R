@@ -17,12 +17,14 @@ library(forcats)
 library(data.table)
 library(plotly)
 library(geojsonsf)
+library(purrr)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
 source(paste0(pth, "/homes.R"))
+source(paste0(pth, "/recommendation_model.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
@@ -67,8 +69,10 @@ prime_age_df <- get_prime_age_data(labor_force_df)
 dependency_df <- get_dependency_data(labor_force_df)
 job_opening_df <- get_job_openings_data()
 county_job_opening_df <- get_county_job_openings_data()
+rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
+county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 vt_map <- county_level_map(county)
@@ -86,21 +90,14 @@ ui <- page_fluid(
   theme = theme,
   
   card(
-    style = "width: 150px; height: 150px; margin-right: 10px;",
+    height = 100,
+    card_header(class = "bg-primary", "Vermont Futures Project: Interactive Dashboard"),
     card_image(
       file = "favicon-vt-futures.jpg",
+      alt = "VT Futures Logo",
       href = "https://vtfuturesproject.org/"
     ),
-  ),
-  
-  card(
-    card_header(
-      class = "bg-primary",
-      tags$div(
-        style = "font-size: 28px; text-align: center; width: 100%;",
-        "Vermont Futures Project: Interactive Dashboard"
-      )
-    )
+    card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
   ),
   
   #### POPULALTION PAGE ####
@@ -128,8 +125,16 @@ ui <- page_fluid(
           childcare, dining, repairs, and healthcare."),
                 p("Growing the prime working-age population is essential to closing the 
           workforce gap, improving affordability, and strengthening communities 
-          to better meet the needs of all Vermonters.")
+          to better meet the needs of all Vermonters."),
+                checkboxInput("show_pop_county_view", "View by County", value = FALSE),
+                conditionalPanel(
+                  condition = "input.show_pop_county_view == true",
+                  selectInput("selected_pop_county", "Select a County",
+                              choices = unique(county_age_data$NAME),
+                              selected = NULL)
+                )
               ),
+              
               mainPanel(
                 plotOutput("age_plot", height = "600px")
               )
@@ -375,7 +380,14 @@ ui <- page_fluid(
           card_body(
             plotOutput("job_opening_plot", height = "600px")
           )
-        )
+        ), 
+        card(
+          card_header(class = "bg-primary", "County Rankings"),
+          card_body(
+            plotOutput("county_rank_plot", height = "600px")
+          )
+        ),
+        
       )
     )
     
@@ -426,7 +438,13 @@ server <- function(input, output, session) {
   })
   
   output$age_plot <- renderPlot({
-    plot_age_distribution(state_age_data, natl_age_data, collierFL_age_data)
+    view_county <- isTRUE(input$show_pop_county_view)
+    
+    if (view_county) {
+      plot_county_age_distribution(input$selected_pop_county, county_age_data, natl_age_data, collierFL_age_data)
+    } else {
+      plot_age_distribution(state_age_data, natl_age_data, collierFL_age_data)
+    }
   })
   
   output$county_plot <- renderPlot({
@@ -438,7 +456,6 @@ server <- function(input, output, session) {
   })
   
   output$home_plot <- renderPlot({
-    
     view_county <- isTRUE(input$show_homes_county_view)
     
     if (view_county) {
@@ -506,6 +523,10 @@ server <- function(input, output, session) {
   
   output$job_opening_plot <- renderPlot({
     plot_job_opening_rate(job_opening_df)
+  })
+  
+  output$county_rank_plot <- renderPlot({
+    plot_rank(rank_df)
   })
 
 }

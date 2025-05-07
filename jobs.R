@@ -274,3 +274,69 @@ plot_job_opening_rate <- function(job_openings_long) {
       axis.text.y = element_text(size = 10)
     )
 }
+
+plot_county_job_opening <- function(county_job_opening_df) {
+  ggplot(county_job_opening_df, aes(x = reorder(county, job_opening_rate), y = job_opening_rate, fill = job_opening_rate)) +
+    geom_col(width = 0.7) +
+    geom_text(aes(label = sprintf("%.2f", job_opening_rate)), 
+              hjust = -0.1, 
+              size = 4, 
+              color = "black") +
+    coord_flip() +
+    labs(
+      title = "Job Opening Rate By County",
+      x = "County",
+      y = "Job Opening Rate",
+      caption = "Note: Job Opening rate = (active job openings for county) / (active job openings + total employed in county)\nSource: Vermont JobLink & U.S. Bureau of Labor Statistics."
+    ) +
+    scale_fill_gradient(low = "darkgreen", high = "darkgreen") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+    scale_x_discrete(labels = function(x) sub(" County,.*", "", x)) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 19 ),
+      axis.text.x = element_text(color = "black", size = 10),
+      axis.text.y = element_text(color = "black", size = 10),
+      plot.caption = element_text(hjust = 0, size = 8),
+      legend.position = "none"
+    )
+}
+
+plot_rank <- function(rank_df) {
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(scales)
+  library(stringr)
+  
+  rank_df |>
+    pivot_longer(-county, names_to = "variable") |>
+    mutate(variable = str_replace_all(variable, "_", " ")) |>
+    group_by(variable) |>
+    mutate(rank = case_when(
+      variable %in% c("job opening rate", "prime labor pr") ~ rank(-value),
+      variable == "dependency ratio" ~ rank(value),
+      TRUE ~ NA_real_
+    )) |>
+    ggplot() +
+    geom_tile(aes(x = variable, y = county, fill = rank)) +
+    scale_fill_gradientn(
+      colors = c("darkblue", "white", "darkred"),
+      values = scales::rescale(c(1, 7, 13))
+    ) +
+    geom_text(aes(x = variable, y = county, label = rank, color = rank)) +
+    scale_color_gradientn(
+      colors = c("white", "black", "white"),
+      values = scales::rescale(c(1, 7, 14)),
+      guide = "none"  # hide color legend for text
+    )+
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(size = 14),
+      axis.text.y = element_text(size = 14),
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),  # title bigger and centered
+      legend.title = element_text(size = 14),  # legend title size
+      legend.text = element_text(size = 12)    # legend label size
+    )
+}
+
