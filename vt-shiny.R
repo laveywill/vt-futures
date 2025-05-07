@@ -55,19 +55,31 @@ zoning_variables = c(
 #### Read in data ####
 census_variables <- get_census_variables()
 census_data <- census_data(year)
+
 state <- census_data$state
+
 county <- census_data$county
+
 town <- census_data$place
+
 natl <- census_data$natl
+
 collierFL <- census_data$collierFL
 
+
 housing <- get_housing_data(year)
+
 zoning <- get_zoning_data()
 
+
 labor_force_df <- get_lf_data()
+
 prime_age_df <- get_prime_age_data(labor_force_df)
+
 dependency_df <- get_dependency_data(labor_force_df)
+
 job_opening_df <- get_job_openings_data()
+
 county_job_opening_df <- get_county_job_openings_data()
 rank_df <- get_rank_data()
 
@@ -86,8 +98,11 @@ theme <- bs_theme(
 
 #### UI #### 
 
+#### HOME PAGE ####
+
 ui <- page_fluid(
   theme = theme,
+<<<<<<< Updated upstream
   
   card(
     height = 100,
@@ -98,11 +113,39 @@ ui <- page_fluid(
       href = "https://vtfuturesproject.org/"
     ),
     card_body(p("An interactive dashboard to make Vermont's publicly available information digestable"))
+=======
+  card(
+    card_header(
+      class = "bg-primary",
+      tags$div(
+        style = "font-size: 28px; text-align: center; width: 100%;",
+        "Vermont Futures Project: Interactive Dashboard"
+      )
+    )
+>>>>>>> Stashed changes
   ),
-  
-  #### POPULALTION PAGE ####
-
   navset_card_pill(
+    nav_panel("Home Page",
+    div(  
+      style = "display: flex; justify-content: center; gap: 20px;",
+      card(
+      style = "width: 250px; height: 250px;",
+      card_image(
+        file = "vt-futures-logo.png",
+        href = "https://vtfuturesproject.org/"
+      )
+    ),
+  card(
+    style = "width: 250px; height: 250px;",
+    card_image(
+      file = "midd_math_stat.jpg",
+      href = "https://www.middlebury.edu/college/academics/mathematics"
+    )
+  )
+)
+),
+
+  #### POPULALTION PAGE ####
     nav_panel("Population",
       layout_column_wrap(  
         width = 1,
@@ -219,9 +262,9 @@ ui <- page_fluid(
       )
     ),
  
- #### HOMES PAGE ####
+ #### HOUSING PAGE ####
     
-    nav_panel("Homes",
+    nav_panel("Housing",
       layout_column_wrap(
         width = 1,
         card(
