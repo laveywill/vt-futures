@@ -179,7 +179,17 @@ plot_county_zoning <- function(zoning_df, county_selection, var_selected) {
     filter(County == county_selection) |> 
     ggplot() +
     geom_sf(aes(fill = var_selected,
-                geometry = geometry))
+                geometry = geometry)) + 
+    labs(title = paste0(county_selection, "\n")) +
+    coord_sf(expand = FALSE) +
+    theme_void() + 
+    theme(
+      plot.title = element_text(size = 20, face = "bold", family = "Georgia", hjust = 0.5),
+      plot.margin = margin(5, 10, 5, 10),
+      legend.position="top",
+      legend.key.size = unit(0.5, "cm"),
+      legend.key.width = unit(3,"cm") 
+    )
   
     return(ggplotly(p))
   
