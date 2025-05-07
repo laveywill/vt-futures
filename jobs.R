@@ -172,7 +172,7 @@ plot_county_map_jobs <- function(df, county_col, show_diff) {
   )
   
   national_averages <- c(
-    "Labor Force", 
+    "Labor Force" = 0, 
     "Unemployed Population" = 0.042,
     "High School Graduate or Equivalent" = 0.279, 
     "Bachelor's Degree" = 0.235, 
@@ -192,6 +192,7 @@ plot_county_map_jobs <- function(df, county_col, show_diff) {
     
     df <- df %>%
       mutate(
+        !!county_sym := as.numeric(gsub("[^0-9.]", "", !!county_sym)),
         diff = !!county_sym - national_value,
         value_label = if (is_percent) {
           case_when(
@@ -211,7 +212,18 @@ plot_county_map_jobs <- function(df, county_col, show_diff) {
     fill_aes <- aes(fill = diff)
     label_aes <- aes(label = value_label)
     
-    fill_scale <- scale_fill_viridis_c(name = NULL)
+    max_diff <- max(df$diff, na.rm = TRUE)
+    max_range <- max_diff + 0.25*max_diff
+    
+    min_diff <- min(df$diff, na.rm = TRUE)
+    min_range <- min_diff - 0.25*min_diff
+    
+    fill_scale <- scale_fill_viridis_c(name = "Difference from\nnational average", 
+                                       option = "D",
+                                       limits = c(min_range, max_range),
+                                       oob = scales::squish,
+                                       labels = if (is_percent) percent_format(accuracy = 0.01) else waiver())
+    
   } else {
     df <- df %>%
       mutate(

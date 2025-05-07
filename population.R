@@ -218,7 +218,8 @@ plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
     label_aes <- aes(label = value_label)
     
     fill_scale <- scale_fill_gradient(
-      low = "honeydew", high = "darkgreen",
+      low = "honeydew", 
+      high = "darkgreen",
       name = NULL, 
       labels = if (is_percent) percent_format(accuracy = 0.01) else scales::comma_format(accuracy = 1)
     )
