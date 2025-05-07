@@ -67,6 +67,7 @@ prime_age_df <- get_prime_age_data(labor_force_df)
 dependency_df <- get_dependency_data(labor_force_df)
 job_opening_df <- get_job_openings_data()
 county_job_opening_df <- get_county_job_openings_data()
+rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
 natl_age_data <- build_age_df(natl)
@@ -363,11 +364,12 @@ ui <- page_fluid(
           )
         ), 
         card(
-          card_header(class = "bg-primary", "County Job Openings"),
+          card_header(class = "bg-primary", "County Rankings"),
           card_body(
-            plotOutput("county_job_opening_plot", height = "600px")
+            plotOutput("county_rank_plot", height = "600px")
           )
-        )
+        ),
+        
       )
     )
     
@@ -500,8 +502,8 @@ server <- function(input, output, session) {
     plot_job_opening_rate(job_opening_df)
   })
   
-  output$county_job_opening_plot <- renderPlot({
-    plot_county_job_opening(county_job_opening_df)
+  output$county_rank_plot <- renderPlot({
+    plot_rank(rank_df)
   })
 
 }
