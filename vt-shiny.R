@@ -68,11 +68,11 @@ county <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = 
 natl <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = FALSE)
 collierFL <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = FALSE)
 
-# housing <- get_housing_data(year)
-# zoning <- get_zoning_data()
-housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"), check.names = FALSE)
-# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","), check.names = FALSE)
+housing <- get_housing_data(year)
 zoning <- get_zoning_data()
+# housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"))
+# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","), check.names = FALSE)
+
 
 # labor_force_df <- get_lf_data()
 # prime_age_df <- get_prime_age_data(labor_force_df)
