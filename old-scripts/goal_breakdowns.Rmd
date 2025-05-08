@@ -1,0 +1,543 @@
+---
+title: "breaking_down_targets"
+output: html_document
+date: "2025-02-24"
+---
+
+```{r setup, include=FALSE}
+#install.packages("tidycensus")
+#install.packages("censusapi")
+library(tidycensus)
+library(tidyverse)
+library(censusapi)
+```
+
+Goals:
+
+- Increase Vermont’s population to 802,000 residents by 2035 by recruiting and 
+retaining working-age people.
+  - Current population: 647,464
+-  Increase labor force participation rate to 70% by 2035   
+  - Add an average of 13,500 people to its workforce annually over 
+    the next 10-15 years
+- Increase Vermont’s non-seasonal housing stock to 350,000 homes by 2035
+  - 36,000 primary homes needed in VT over the next 5 years 
+    - 7,200 new homes annually over the next five years
+
+```{r}
+Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+
+state_fips <- 50
+
+test <- getCensus(
+  name = "acs/acs5",
+  vintage = 2020,
+  vars = c("NAME", "B01001_001E", "B19013_001E"),
+  region = "county:*",
+  regionin = paste0("state:", state_fips)
+)
+```
+
+### STATEWIDE AGE BREAKDOWN
+```{r}
+# pull data for age distributions
+
+vt_age <- getCensus(
+  name = "acs/acs5",
+  vintage = 2023,
+  vars = paste0("B01001_", str_pad(3:49, 3, pad="0"), "E"),
+  region = "state:50"
+  ) %>%
+  select(-c("state"))
+vt_age
+```
+
+
+
+
+
+```{r}
+# pull data for age distributions
+
+age_distribution_data <- function(year) {
+  age <- getCensus(
+    name = "acs/acs5",
+    vintage = year,
+    vars = paste0("B01001_", str_pad(3:49, 3, pad="0"), "E"),
+    region = "state:50"
+  ) %>%
+    select(-c("state"))
+  
+  age_long <- as.data.frame(t(age))
+  colnames(age_long) <- "population"
+  age_long$variable <- rownames(age_long) 
+  age_long$population <- as.numeric(age_long$population)  
+
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+
+  age_long$age_group <- sapply(age_long$variable, function(var) {
+    matched_group <- names(Filter(function(pattern) str_detect(var, pattern), age_group_patterns))
+    if (length(matched_group) > 0) return(matched_group) else return(NA)
+  })
+
+  age_summary <- age_long %>%
+    group_by(age_group) %>%
+    summarise(total_population = sum(population, na.rm = TRUE)) %>%
+    filter(!is.na(age_group))  # Remove any unmatched rows
+
+  return(age_summary)
+}
+```
+
+```{r}
+age_distribution_data(2023)
+```
+
+```{r}
+  natl_census_data_raw <- getCensus(
+    name = "acs/acs5",
+    vintage = 2023,
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
+    region = "us:1"
+  )
+  
+  natl_census_data <- natl_census_data_raw |> 
+    rename_with(~ census_variables$title, .cols = any_of(census_variables$code))
+```
+
+
+```{r}
+head(natl_census_data)
+```
+
+```{r}
+plot_age_distribution <- function(state_df, national_df) {
+  # Shared age bucket and label formatting
+  process_age_data <- function(df) {
+    df %>%
+      mutate(
+        age_bucket = case_when(
+          age_group %in% c("Under 5 years", "5 to 9 years", "10 to 14 years") ~ "0-14 years",
+          age_group %in% c("15 to 19 years", "20 to 24 years") ~ "15-24 years",
+          age_group %in% c("25 to 29 years","30 to 34 years","35 to 39 years",
+                           "40 to 44 years","45 to 49 years") ~ "25-49 years",
+          age_group %in% c("50 to 54 years", "55 to 59 years", "60 to 64 years") ~ "50-64 years",
+          age_group %in% c("65 to 69 years", "70 to 74 years", "75 to 79 years",
+                           "80 to 84 years", "85 years and over") ~ "65+ years",
+          TRUE ~ "Unknown"
+        ),
+        age_label = case_when(
+          age_group == "Under 5 years" ~ "Under 5",
+          age_group == "85 years and over" ~ "85+",
+          TRUE ~ gsub(" to ", " - ", gsub(" years", "", age_group))
+        )
+      )
+  }
+  state_df <- process_age_data(state_df)
+  national_df <- process_age_data(national_df)
+
+  age_levels <- rev(c("85+", "80 - 84", "75 - 79", "70 - 74",
+                      "65 - 69", "60 - 64", "55 - 59", "50 - 54",
+                      "45 - 49", "40 - 44", "35 - 39", "30 - 34", 
+                      "25 - 29", "20 - 24", "15 - 19", "10 - 14", 
+                      "5 - 9", "Under 5"))
+  state_df$age_label <- factor(state_df$age_label, levels = age_levels)
+  national_df$age_label <- factor(national_df$age_label, levels = age_levels)
+
+  scale_factor <- sum(state_df$total_population) / sum(national_df$total_population)
+
+  national_density <- national_df %>%
+    mutate(age_numeric = as.numeric(age_label),
+           scaled_population = total_population * scale_factor) %>%
+    complete(age_label = age_levels, fill = list(`Total Population` = 0)) %>%
+    arrange(age_label)
+
+  # Scale national density to match the range of state data
+ # national_density$scaled_density <- scales::rescale(national_density$total_population, to = c(0, max_state))
+
+  # Plot
+  ggplot(state_df, aes(x = age_label, y = total_population, fill = age_bucket)) +
+    geom_bar(stat = "identity") +
+    geom_line(data = national_density, aes(x = age_label, y = scaled_population, group = 1),
+              color = "black", size = 1.2) +
+    labs(
+      x = "Age Group", 
+      y = "\nTotal Population", 
+      title = "Vermont Age Group Distribution (2023)"
+    ) +
+    scale_y_continuous(labels = scales::comma) +
+    scale_fill_manual(values = c(
+      "0-14 years" = "deepskyblue1", 
+      "15-24 years" = "aquamarine2", 
+      "25-49 years" = "aquamarine4", 
+      "50-64 years" = "orange", 
+      "65+ years" = "red"
+    )) +
+    theme_minimal() +
+    theme(
+      legend.position = "none", 
+      text = element_text(family = "Georgia"),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      axis.text.x = element_text(size = 14, face = "bold", angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 22, face = "bold")
+    )
+}
+```
+
+
+```{r}
+build_state_age_df <- function(df) {
+  # Filter for state level age demographic data
+  age <- df %>%
+    select(starts_with("B01001_"))  %>%
+    summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
+  
+  age_long <- as.data.frame(t(age))
+  colnames(age_long) <- "population"
+  age_long$variable <- rownames(age_long) 
+  age_long$population <- as.numeric(age_long$population)  
+  
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  age_long$age_group <- sapply(age_long$variable, function(var) {
+    matched_group <- names(Filter(function(pattern) str_detect(var, pattern), age_group_patterns))
+    if (length(matched_group) > 0) return(matched_group) else return(NA)
+  })
+  
+  age_summary <- age_long %>%
+    group_by(age_group) %>%
+    summarise(total_population = sum(population, na.rm = TRUE)) %>%
+    filter(!is.na(age_group)) 
+  return(age_summary)
+}
+```
+
+
+```{r}
+age_groups2023 <- age_distribution_data(2023)
+natl_data_age <- build_state_age_df(natl_census_data)
+plot_age_distribution(age_groups2023, natl_data_age)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### POPULATION STUFF 
+```{r}
+vt_pop <- sum(test$B01001_001E)
+vt_income <- sum(test$B19013_001E)
+
+test <- test %>%
+  rename( "population" = "B01001_001E", "median_household_income" = "B19013_001E") %>%
+  mutate(pop_proportion = (population/vt_pop),
+         income_proportion = (median_household_income/vt_income))
+head(test)
+```
+
+```{r}
+pop_goal <- 802000-647464
+goal_breakdown <- test %>%
+  select("NAME", "income_proportion", "pop_proportion") %>%
+  mutate(new_proportion_by_pop = floor(pop_proportion*pop_goal),
+         new_proportion_by_income = floor(income_proportion*pop_goal),
+         pop_income_index = (pop_proportion + income_proportion)/2,
+         new_proportion_by_index = floor(pop_income_index_norm*pop_goal))
+head(goal_breakdown)
+```
+
+
+
+```{r}
+# install.packages("treemap")
+# library(treemap)
+```
+
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  mutate(label = paste(NAME, new_proportion_by_pop, sep=": "))
+
+treemap(goal_breakdown,
+            index="label",
+            vSize="new_proportion_by_pop",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = 
+          "Breakdown of New Population in Each County by Current Population"
+            )
+```
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  mutate(inc_label = paste(NAME, new_proportion_by_income, sep=": "))
+
+treemap(goal_breakdown,
+            index="inc_label",
+            vSize="new_proportion_by_income",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = "Breakdown of New Population in Each County by Income",
+            )
+```
+
+```{r}
+goal_breakdown$NAME <- trimws(sapply(strsplit(goal_breakdown$NAME, ","), `[`, 1))
+goal_breakdown <- goal_breakdown %>%
+  # mutate(index_label = paste(NAME, "\n" , "\n", round(new_proportion_by_index/pop_goal*100,1),"%"))
+  mutate(index_label = paste(NAME, "\n" , "\n", round(new_proportion_by_index, -2), "people"))
+treemap(goal_breakdown,
+            index="index_label",
+            vSize="new_proportion_by_index",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = "Breakdown of New Population in Each County by Income/Population",
+            )
+```
+
+```{r}
+Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+
+state_fips <- 50
+
+towns <- getCensus(
+  name = "acs/acs5",
+  vintage = 2020,
+  vars = c("NAME", "B01001_001E", "B19013_001E"),
+  region = "county subdivision:*",
+  regionin = paste0("state:", state_fips)
+)
+
+towns <- towns %>%
+  filter(if_all(everything(), ~ . >= 0))
+```
+
+```{r}
+drop_na(towns)
+towns <- towns %>%
+  rename( "population" = "B01001_001E", "median_household_income" = "B19013_001E") %>%
+  separate(NAME, into = c("town", "county", "state"), sep = ", ") %>%
+  mutate(
+    town = str_remove_all(town, "(?i)\\btown\\b"),
+    county = str_remove_all(county, "(?i)\\bcounty\\b"),
+    town = str_trim(town),
+    county = str_trim(county),
+  )
+
+head(towns)
+```
+
+```{r}
+towns <- towns %>%
+  mutate(
+pop_proportion = (population/vt_pop),
+    income_proportion = (median_household_income/vt_income),
+    new_proportion_by_pop = floor(pop_proportion*pop_goal),
+    new_proportion_by_income = floor(income_proportion*pop_goal),
+    pop_income_index = (pop_proportion + income_proportion)/2,
+    new_proportion_by_index = floor(pop_income_index*pop_goal)
+)
+head(towns)
+```
+
+
+```{r}
+# function to make a tree map for each town in the county when clicked
+
+town_treemap <- function(county, df){
+  town_df <- df %>%
+  filter(county == !!county) %>%
+  mutate(label = paste(town,":", new_proportion_by_pop, "people"))
+  print(summary(town_df$new_proportion_by_index))
+  treemap(town_df,
+            index="label",
+            vSize="new_proportion_by_pop",
+            type="index", 
+            fontsize.labels = c(8, 12),
+            title = "Breakdown of New Population in Each Town by Current Population",
+            vColor = "new_proportion_by_pop", 
+            palette = "Oranges"
+            )
+}
+```
+
+```{r}
+town_treemap("Addison", towns)
+```
+
+```{r}
+latent_cap <- read_csv("latent-capacity.csv")
+head(latent_cap)
+```
+
+```{r}
+latent_cap <- latent_cap %>%
+  rename(latent_cap = `Latent Capacity`) %>%
+  group_by(County) %>%
+  summarise(latent_cap = sum(latent_cap))
+latent_cap
+```
+
+```{r}
+library(data.table)
+jobs_homes <- read.csv("JobsHomesMap_data.csv", sep = "\t", fileEncoding = "UTF-16")
+
+jobs_homes <- jobs_homes %>%
+  drop_na() %>%
+  rename(jobs_homes_index = Jobs.Homes.Index) %>%
+  group_by(County) %>%
+  summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
+  mutate(County = str_trim(str_remove(County, "County")))
+jobs_homes
+```
+
+```{r}
+library(readxl)
+school_latency <- read_excel("school_latency.xlsx", sheet = "Data")
+school_latency <- school_latency %>%
+  rename(latent_cap = `Latent Capacity`) %>%
+  drop_na() %>%
+  group_by(County) %>%
+  summarise(latent_cap_school = sum(latent_cap)) 
+school_latency
+```
+
+```{r} 
+county_caps <- left_join(latent_cap, jobs_homes )
+county_caps <- left_join(county_caps, school_latency)
+county_caps
+```
+```{r}
+test <- county_caps %>% filter(County == "Addison")
+test_long <- test %>%
+  pivot_longer(cols = -County, names_to = "Metric", values_to = "Value")
+
+# Create the plot
+ggplot(test_long, aes(x = Metric, y = Value, fill = Metric)) +
+  geom_bar(stat = "identity", position = "dodge")  + 
+  labs(title = "County-Level Metrics", x = "Metric", y = "Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+  pop <- getCensus(
+    name = "acs/acs5",
+    vintage = 2020,
+    vars = c("NAME", "B01001_001E"),
+    region = "county:*",
+    regionin = paste0("state:", state_fips)
+  )  
+vt_pop <- sum(pop$B01001_001E)
+
+   pop <- pop %>% 
+     rename( "population" = "B01001_001E") %>%
+     mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
+            County = str_trim(str_remove(NAME, "County, Vermont"))
+           ) %>% select(County, pop_goal)
+   head(pop)
+```
+
+
+```{r}
+## using 18:1
+library(readxl)
+pth <- getwd()
+school <- read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
+  mutate(latency = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
+  distinct(County, school_district, latency) %>% 
+  group_by(County) %>%
+  summarise(latency = sum(latency)) 
+head(school, 40)
+```
+```{r}
+library(sf)
+addison <- read_sf("ACRPC_Zoning.geojson")
+unique(addison$Jurisdiction)
+```
+
+```{r}
+head(addison)
+
+addison |>
+  filter(str_detect(`Jurisdiction District Name`, "Middlebury")) |>
+  # ggplot() +
+  # geom_sf(aes(fill = `4F Allowance`))
+  leaflet() |>
+  addTiles() |>
+  addPolygons(label = ~`Jurisdiction District Name`,
+                fill = ~`1F Allowance`)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

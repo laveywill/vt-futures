@@ -104,7 +104,7 @@ build_county_caps_df <- function() {
     rename( "population" = "B01001_001E") %>%
     mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
            County = str_trim(str_remove(NAME, "County, Vermont"))
-    ) %>% select(County, pop_goal)
+    ) %>% select(County, population, pop_goal)
   
   latent_cap <- 
     read_csv(paste0(pth, "/latent-capacity.csv")) %>%
@@ -132,7 +132,7 @@ build_county_caps_df <- function() {
     left_join(latent_cap, jobs_homes, by = "County") %>%
       left_join(school_latency, by = "County") %>%
       left_join(pop, by = "County") %>% select (
-        County, pop_goal, latent_cap, jobs_homes_diff, latent_cap_school
+        County, pop_goal, population, latent_cap, jobs_homes_diff, latent_cap_school
       ) %>% 
       drop_na() 
   return(county_caps)

@@ -131,7 +131,26 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
     fill_aes <- aes(fill = diff)
     label_aes <- aes(label = value_label)
     
-    fill_scale <- scale_fill_viridis_c(name = NULL)
+    max_diff <- max(df$diff, na.rm = TRUE)
+    max_range <- max_diff + 0.2*max_diff
+    
+    min_diff <- min(df$diff, na.rm = TRUE)
+    min_range <- min_diff - 0.2*min_diff
+    
+    fill_scale <- scale_fill_viridis_c(
+      name = "Difference from\nnational average", 
+      option = "D",
+      limits = c(min_range, max_range),
+      oob = scales::squish,
+      labels = if (is_percent) {
+        percent_format(accuracy = 0.01)
+      } else if (is_dollar) {
+        dollar
+      } else {
+        waiver()
+      }
+    )
+    
     } else {
       df <- df %>%
         mutate(value_label = case_when(
@@ -170,64 +189,73 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
   return(map)
 }
 
-plot_county_zoning <- function(zoning_df, county_selection, var_selected) {
-  # input on the side panel to select the zoning_df column to view
-  # put all plots into a 3x1 grid of graphs, (state, click-down county, click-down town)
-  # convert to plotly graphs (adding in the streetview backgrounds)
+plot_county_map <- function(town_level_df, county_selection) {
+  # County map of towns in selected county
   
-  p <- zoning_df |> 
-    filter(County == county_selection) |> 
+  if (is.null(county_selection)) {
+    county_selection <- "Addison"
+  }
+  
+  p <- town_level_df |> 
+    filter(NAME == county_selection) |> 
     ggplot() +
-    geom_sf(aes(fill = var_selected,
-                geometry = geometry))
-  
-    return(ggplotly(p))
-  
-  # centroid <- zoning_df |> 
-  #   filter(County == county_selection) |> 
-  #   st_as_sf() |> 
-  #   mutate(geometry = st_make_valid(geometry)) |> 
-  #   st_centroid() |> 
-  #   st_coordinates() |> 
-  #   colMeans()
-  
-  # Ensure `1F Allowance` is a factor for better color handling
-  zoning_df$`1F Allowance` <- as.factor(zoning_df$`1F Allowance`)
-  
-  zoning_df_clean <- zoning_df %>%
-    filter(!is.na(.[[selected_column]]))
-  
-  # Create a geojson object to pass into plot_ly (required for choropleth map)
-  zoning_geojson <- geojsonsf::sf_geojson(st_as_sf(zoning_df_clean))
-  
-  # Plot using choropleth
-  p <- plot_ly(
-    geojson = zoning_geojson,  # Pass the geojson object
-    type = "choropleth",       # Use choropleth for polygons
-    locations = ~zoning_df_clean$OBJECTID,  # Use rownames for unique IDs
-    color = ~as.numeric(zoning_df_clean[[selected_column]]),  # Dynamically color by selected column
-    colorscale = "Viridis",    # Set color scale
-    colorbar = list(title = selected_column),  # Set colorbar title dynamically
-    hoverinfo = "text",
-    text = ~paste("County:", zoning_df_clean[["County"]], "<br>", selected_column, ":", zoning_df_clean[[selected_column]])
-  )
-  
-  # Layout with OpenStreetMap style
-  p <- p |> layout(
-    geo = list(
-      scope = 'usa',  # Adjust scope to focus on your region (if needed)
-      projection = list(type = 'mercator'),  # Mercator projection
-      showland = TRUE,
-      landcolor = "white",
-      subunitcolor = "gray",
-      showlakes = TRUE,
-      lakecolor = "white"
-    ),
-    margin = list(l = 0, r = 0, t = 0, b = 0)  # Remove white margins
-  )
-  
-  p
+    geom_sf() + 
+    geom_sf_label(aes(label = TOWNNAMEMC), nudge_y = -0.1, size = 3) +
+    labs(title = paste0(county_selection, "\n")) +
+    coord_sf(expand = FALSE) +
+    theme_void() + 
+    theme(
+      plot.title = element_text(size = 20, face = "bold", family = "Georgia", hjust = 0.5),
+      plot.margin = margin(5, 10, 5, 10),
+      legend.position="top",
+      legend.key.size = unit(0.5, "cm"),
+      legend.key.width = unit(3,"cm") 
+    )
+     
+    return(p)
 }
   
+plot_town_zoning <- function(zoning_df, county_town_association, county_selection, town_selection, var_selected) {
+  
+  if (is.null(county_selection)) {
+    county_selection <- "Addison"
+  }
+  
+  possible_towns <- county_town_association |>
+    filter(NAME == county_selection) |>
+    pull(TOWNNAMEMC)
+  
+  if (is.null(town_selection) || !(town_selection %in% possible_towns)) {
+    town_selection <- possible_towns[1]
+  }
+  
+  df_filtered <- zoning_df |>
+    filter(Jurisdiction == town_selection) |>
+    st_as_sf()
+  
+  pal <- colorFactor("YlOrRd", domain = df_filtered[[var_selected]])
+  
+  p <- df_filtered |> 
+    leaflet() |>
+    addProviderTiles(providers$OpenStreetMap) |>
+    addPolygons(
+      fillColor = ~pal(df_filtered[[var_selected]]),
+      fillOpacity = 0.7,
+      weight = 1,
+      label = ~`Jurisdiction District Name`
+    ) |>
+    addLegend("bottomright", pal = pal, values = df_filtered[[var_selected]], title = var_selected)
+  
+  return(p)
+}
+
+plot_grobs <- function(main_map, county_town_map) {
+  
+  grobs <- list(ggplotGrob(main_map), ggplotGrob(county_town_map))
+  
+  return(grid.arrange(grobs[[1]], grobs[[2]], ncol = 1))
+}
+
+
 
 
