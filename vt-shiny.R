@@ -18,6 +18,7 @@ library(data.table)
 library(plotly)
 library(geojsonsf)
 library(purrr)
+library(gridExtra)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -88,6 +89,8 @@ county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 vt_map <- county_level_map(county)
+town_map <- town_level_map()
+county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
 
 theme <- bs_theme(
   primary = "darkgreen", secondary = "#2c3e50",
@@ -303,23 +306,18 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
                 div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
                 div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
+              ),
+              selectInput(
+                "zoning_var_col",
+                label = "Select a Variable to Explore",
+                choices = zoning_variables,
+                selected = "1F Allowance"
               )
             ),
-            plotOutput("homes_county_map", click = "homes_map_click", height = "500px"),
-            conditionalPanel(
-              condition = "output.zoning_county_selected",
-              layout_columns(
-                col_widths = c(10, 2),
-                plotlyOutput("zoning_map"),
-                selectInput(
-                  "zoning_var_col",
-                  label = "Select a Variable to Explore",
-                  choices = zoning_variables
-                )
-              )
-            )
+            plotOutput("housing_map_plot", click = "map_click", height = "900px"),
+            leafletOutput("town_leaflet", height = "400px")
           )
-        ),
+        )
       )
     ),
     
@@ -413,16 +411,16 @@ ui <- page_fluid(
             plotOutput("county_rank_plot", height = "600px")
           )
         ),
-        
       )
     )
-    
   )
 )
 
 #### Server ####
 
 server <- function(input, output, session) {
+  
+  #### POPULATION PLOTS ####
   
   county_caps_df <- reactive({
     build_county_caps_df()
@@ -481,15 +479,79 @@ server <- function(input, output, session) {
     jobs_homes_index_scale(county_caps_df(), county = input$selected_county)
   })
   
+  #### HOUSING PLOTS ####
+  
   output$home_plot <- renderPlot({
     view_county <- isTRUE(input$show_homes_county_view)
-    
     if (view_county) {
       plot_county_housing(housing, input$selected_homes_county)
     } else {
     plot_state_housing(housing)
     }
+  })
+  
+  # Map interactivity functionality housing page
+  selected_zoning_county <- reactiveVal(NULL)
+  selected_zoning_town <- reactiveVal(NULL)
+  
+  observeEvent(input$map_click, {
+    click <- input$map_click
+    if (is.null(click)) return()
     
+    if (click$y > 600 && click$y <= 900) {
+      # Top map
+      click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(vt_map))
+      clicked_index <- st_intersects(click_point, vt_map, sparse = FALSE)
+      
+      if (any(clicked_index)) {
+        clicked_name <- vt_map$NAME[which(clicked_index)[1]]
+        selected_zoning_county(clicked_name)
+      }
+      
+    } else if (click$y > 300 && click$y <= 600) {
+      # Middle map
+      click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(town_map))
+      clicked_index <- st_intersects(click_point, town_map, sparse = FALSE)
+      
+      if (any(clicked_index)) {
+        clicked_name <- town_map$TOWNNAMEMC[which(clicked_index)[1]]
+        selected_zoning_town(clicked_name)
+      }
+      
+    } 
+  })
+    
+  output$housing_map_plot <- renderPlot({
+    
+    req(input$homes_var_col)
+    show_diff <- isTRUE(input$show_natl_diff)
+    main_map <- plot_county_map_homes(df = vt_map, 
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
+    
+    county_town_map <- plot_county_map(town_level_df = town_map,
+                                       county_selection = selected_zoning_county())
+    
+    plot_grobs(main_map, county_town_map)
+  })
+  
+  output$town_leaflet <- renderLeaflet({
+    plot_town_zoning(zoning_df = zoning,
+                     county_town_association = county_town_association,
+                     county_selection = selected_zoning_county(),
+                     town_selection = selected_zoning_town(),
+                     var_selected = input$zoning_var_col)
+  })
+  
+  
+  #### JOB PLOTS ####
+  
+  output$job_opening_plot <- renderPlot({
+    plot_job_opening_rate(job_opening_df)
+  })
+  
+  output$county_rank_plot <- renderPlot({
+    plot_rank(rank_df)
   })
   
   output$jobs_plot <- renderPlot({
@@ -503,59 +565,9 @@ server <- function(input, output, session) {
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
   })
-  
-  
-  # Zoning interactive map
-  output$homes_county_map <- renderPlot({
-    req(input$homes_var_col)
-    
-    show_diff <- isTRUE(input$show_natl_diff)
-    
-    plot_county_map_homes(df = vt_map, 
-                          county_col = input$homes_var_col,
-                          show_diff = show_diff)
-  })
-  
-  selected_zoning_county <- reactiveVal(NULL)
-  observeEvent(input$homes_map_click, {
-    click <- input$homes_map_click
-    if (is.null(click)) return()
-    
-    # Convert click to sf point
-    click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(vt_map))
-    
-    # Find which county was clicked
-    clicked_index <- st_intersects(click_point, vt_map, sparse = FALSE)
-    
-    if (any(clicked_index)) {
-      clicked_name <- vt_map$NAME[which(clicked_index)[1]]
-      selected_zoning_county(clicked_name)
-    }
-  })
-  output$zoning_county_selected <- reactive({
-    !is.null(selected_zoning_county())
-  })
-  outputOptions(output, "zoning_county_selected", suspendWhenHidden = FALSE)
-  
-  output$zoning_map <- renderPlotly({
-    req(selected_zoning_county())
-    plot_county_zoning(
-      zoning, 
-      county_selection = selected_zoning_county(), 
-      var_selected = input$zoning_var_col
-    )
-  })
-  
-  
-  output$job_opening_plot <- renderPlot({
-    plot_job_opening_rate(job_opening_df)
-  })
-  
-  output$county_rank_plot <- renderPlot({
-    plot_rank(rank_df)
-  })
 
 }
 
+#### run ####
 shinyApp(ui, server)
 
