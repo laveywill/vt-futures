@@ -123,7 +123,7 @@ plot_prime_working_age <- function(prime_age_df) {
     labs(title = "Prime Working-Age Adults Labor Force Participation Rate by County",
          x = "County",
          y = "Labor Force Participation Rate (%)" ,
-         caption = "Source: American Community Survey (ACS)")+
+         caption = "Note: LFPR = (sum of labor force counts for Age 25-54) /total population for Age 25-54\nSource: American Community Survey (ACS)")+
     scale_fill_gradient(high = "steelblue", low = "darkred") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
     scale_x_discrete(labels = function(x) sub(" County,.*", "", x)) +
@@ -319,24 +319,32 @@ plot_rank <- function(rank_df) {
       TRUE ~ NA_real_
     )) |>
     ggplot() +
-    geom_tile(aes(x = variable, y = county, fill = rank)) +
+    geom_tile(aes(x = variable, y = county, fill = rank),
+              color = "black") +
     scale_fill_gradientn(
       colors = c("darkblue", "white", "darkred"),
-      values = scales::rescale(c(1, 7, 13))
+      values = scales::rescale(c(1, 7, 13)),
+      breaks = c(1,4,7,10,14)
     ) +
-    geom_text(aes(x = variable, y = county, label = rank, color = rank)) +
-    scale_color_gradientn(
-      colors = c("white", "black", "white"),
-      values = scales::rescale(c(1, 7, 14)),
-      guide = "none"  # hide color legend for text
+    geom_text(aes(x = variable, y = county, label = rank), color = "black") +
+    # scale_color_gradientn(
+    #   colors = c("white", "black", "black"),
+    #   values = scales::rescale(c(1, 7, 14)),
+    #   guide = "none"
+    # )+
+    labs(
+      title = "County Rankings Across Labor Indicators",
+      x = "Indicator",
+      y = "County",
+      fill = "Rank"
     )+
     theme_minimal() +
     theme(
       axis.text.x = element_text(size = 14),
       axis.text.y = element_text(size = 14),
-      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),  # title bigger and centered
-      legend.title = element_text(size = 14),  # legend title size
-      legend.text = element_text(size = 12)    # legend label size
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),  
+      legend.title = element_text(size = 14),  
+      legend.text = element_text(size = 12)    
     )
 }
 
