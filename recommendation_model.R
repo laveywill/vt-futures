@@ -100,7 +100,8 @@ clean_scale_zoning <- function(zoning_df) {
 plot_pop_recommendations <- function(scored_df) {
   
   df_long <- scored_df |> 
-    mutate(difference = rescaled_pop - pop_goal) |> 
+    mutate(difference = rescaled_pop - pop_goal,
+           pop_goal = if_else(difference < 0, rescaled_pop)) |> 
     pivot_longer(
       cols = c(pop_goal, difference),
       names_to = "type",

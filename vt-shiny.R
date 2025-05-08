@@ -53,35 +53,37 @@ zoning_variables = c(
   "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance"
 )
 
+
 #### Read in data ####
 census_variables <- get_census_variables()
-census_data <- census_data(year)
+# census_data <- census_data(year)
+# state <- census_data$state
+# county <- census_data$county
+# town <- census_data$place
+# natl <- census_data$natl
+# collierFL <- census_data$collierFL
+state <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/state.csv")
+county <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/county.csv")
+# town <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/town.csv")
+natl <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/natl.csv")
+collierFL <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/collierFL.csv")
 
-state <- census_data$state
-
-county <- census_data$county
-
-town <- census_data$place
-
-natl <- census_data$natl
-
-collierFL <- census_data$collierFL
-
-
-housing <- get_housing_data(year)
-
+# housing <- get_housing_data(year)
+# zoning <- get_zoning_data()
+housing <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/housing.csv")
+# zoning <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/zoning.csv", sep = ",")
 zoning <- get_zoning_data()
 
-
-labor_force_df <- get_lf_data()
-
-prime_age_df <- get_prime_age_data(labor_force_df)
-
-dependency_df <- get_dependency_data(labor_force_df)
-
-job_opening_df <- get_job_openings_data()
-
-county_job_opening_df <- get_county_job_openings_data()
+# labor_force_df <- get_lf_data()
+# prime_age_df <- get_prime_age_data(labor_force_df)
+# dependency_df <- get_dependency_data(labor_force_df)
+# job_opening_df <- get_job_openings_data()
+# county_job_opening_df <- get_county_job_openings_data()
+# rank_df <- get_rank_data()
+labor_force_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/labor_force_df.csv")
+job_opening_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/job_opening_df.csv")
+dependency_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/dependency_df.csv")
+job_opening_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/job_opening_df.csv")
 rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
