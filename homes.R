@@ -200,7 +200,7 @@ plot_county_map <- function(town_level_df, county_selection) {
     filter(NAME == county_selection) |> 
     ggplot() +
     geom_sf() + 
-    geom_sf_label(aes(label = TOWNNAMEMC), nudge_y = -0.1, size = 3) +
+    geom_sf_label(aes(label = TOWNNAMEMC), nudge_y = -0.1, size = 5) +
     labs(title = paste0(county_selection, "\n")) +
     coord_sf(expand = FALSE) +
     theme_void() + 
