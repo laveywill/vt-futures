@@ -133,7 +133,7 @@ ui <- page_fluid(
 ),
 
   #### POPULALTION PAGE ####
-    nav_panel("Population",
+    nav_panel("People",
       layout_column_wrap(  
         width = 1,
         card(
@@ -200,50 +200,7 @@ ui <- page_fluid(
             ),
               plotOutput("pop_county_map", height = "500px")
           )
-        ),
-        card(
-          card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
-          card_body(
-            layout_sidebar(
-              sidebar = sidebar(
-                bg = "lightgrey",
-                width = "300px",
-                selectInput("selected_county", "Select a County:", 
-                            choices = NULL, 
-                            selected = NULL),
-                p("VFP has a goal of increasing Vermont’s population to 802,000
-           residents by 2035 by recruiting and retaining working-age people."),
-                p("Here, we can see the population goal for each county compared
-           with its current capacities for adding new population
-           in different areas."),
-                strong("Latent capacity:"),
-                p("The difference between the current population and the 
-                  maximum population that the county has supported historically"),
-                strong("School latency:"),
-                p("The difference between the current school enrollment and the 
-                  enrollment if the student-teacher ratio was increased to 18:1")
-              ),
-                plotOutput("county_plot", height = "600px"),
-                plotOutput("jobs_homes_gauge", height = "100px"),
-              p("The jobs-homes index is a measure of the ratio of jobs
-                to homes in a county. Counties that have a ratio less than 
-                1 have more homes than jobs. This usually means that most people
-                who work in the county are able to find housing there, and some
-                people commute outside of the county for work. Counties with a ratio
-                very close to 0 are known as `bedroom communities` because most
-                of the residents of the county do not work there -- there are many more
-                homes than jobs. On the other
-                hand, counties with a ratio greater than 1 have more jobs than
-                homes. Most workers have to commute into the county because 
-                there is not enough housing for everyone who works in the county.
-                This ratio can help us understand which counties are able to support
-                 an influx of population, and where counties can focus on development
-                to help support a population increase. For example, bedroom 
-                communities may want to work on adding jobs, while counties with
-                more jobs than housing would want to prioritize building housing.")
-            )
-          )
-        ),
+        )
       )
     ),
  
@@ -415,10 +372,63 @@ ui <- page_fluid(
         ),
         
       )
+    ),
+    nav_panel(
+      "Recommendations",
+      card(
+        card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
+        card_body(
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              width = "300px",
+              selectInput("selected_county", "Select a County:", 
+                          choices = NULL, 
+                          selected = NULL),
+              p("VFP has a goal of increasing Vermont’s population to 802,000
+           residents by 2035 by recruiting and retaining working-age people."),
+              p("Here, we can see the population goal for each county compared
+           with its current capacities for adding new population
+           in different areas."),
+              strong("Latent capacity:"),
+              p("The difference between the current population and the 
+                  maximum population that the county has supported historically"),
+              strong("School latency:"),
+              p("The difference between the current school enrollment and the 
+                  enrollment if the student-teacher ratio was increased to 18:1")
+            ),
+            plotOutput("county_plot", height = "600px"),
+            plotOutput("jobs_homes_gauge", height = "100px"),
+            p("The jobs-homes index is a measure of the ratio of jobs
+                to homes in a county. Counties that have a ratio less than 
+                1 have more homes than jobs. This usually means that most people
+                who work in the county are able to find housing there, and some
+                people commute outside of the county for work. Counties with a ratio
+                very close to 0 are known as `bedroom communities` because most
+                of the residents of the county do not work there -- there are many more
+                homes than jobs. On the other
+                hand, counties with a ratio greater than 1 have more jobs than
+                homes. Most workers have to commute into the county because 
+                there is not enough housing for everyone who works in the county.
+                This ratio can help us understand which counties are able to support
+                 an influx of population, and where counties can focus on development
+                to help support a population increase. For example, bedroom 
+                communities may want to work on adding jobs, while counties with
+                more jobs than housing would want to prioritize building housing.")
+          )
+        )
+      )
     )
     
   )
 )
+
+
+#### SUMMARY PAGE ####
+
+
+
+
 
 #### Server ####
 
