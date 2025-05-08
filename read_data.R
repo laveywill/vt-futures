@@ -491,7 +491,8 @@ get_zoning_data <- function() {
   list_out <- lapply(files, read_sf)
   
   out <- rbindlist(list_out, fill = TRUE) |> 
-    select(-`Bylaw Date`)
+    select(-`Bylaw Date`) |> 
+    mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
   
   return(out)
 }
@@ -558,3 +559,14 @@ build_county_age_df <- function(df) {
   return(proc)
 }
 
+town_level_map <- function() {
+  
+  county_codes <- data.frame(num = c(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27),
+                    NAME = c("Addison", "Bennington", "Caledonia", "Chittenden", "Essex", "Franklin", "Grand Isle",
+                             "Lamoille", "Orange", "Orleans", "Rutland", "Washington", "Windham", "Windsor"))
+  
+  vt_towns <- st_read("data/vt_town_sf/FS_VCGI_OPENDATA_Boundary_BNDHASH_poly_towns_SP_v1.shp") |> 
+    left_join(county_codes, by = c("CNTY" = "num"))
+  
+  return(vt_towns)
+}

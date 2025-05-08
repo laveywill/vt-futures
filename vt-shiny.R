@@ -18,6 +18,7 @@ library(data.table)
 library(plotly)
 library(geojsonsf)
 library(purrr)
+library(gridExtra)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
@@ -88,6 +89,8 @@ county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 vt_map <- county_level_map(county)
+town_map <- town_level_map()
+county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
 
 theme <- bs_theme(
   primary = "darkgreen", secondary = "#2c3e50",
@@ -206,77 +209,89 @@ ui <- page_fluid(
  
  #### HOUSING PAGE ####
     
-    nav_panel("Housing",
-      layout_column_wrap(
-        width = 1,
-        card(
-          card_header(class = "bg-primary", "State Homes"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Vermont has some of the oldest housing stock in the country. 
-                  A quarter of homes were built before 1940. 
-                  Rates of housing construction were healthy in the 1970s and 
-                  1980s relative to the needs of the population at the time. 
-                  Vermont's current housing shortage is the result of decades of 
-                  decelerating housing construction."),
-                p("Act 250 was passed in 1970"),
-                p("Less than 20% of Vermont's housing stock has been built in the last 20 years"),
-                checkboxInput("show_homes_county_view", "View by County", value = FALSE),
-                conditionalPanel(
-                  condition = "input.show_homes_county_view == true",
-                  selectInput("selected_homes_county", "Select a County",
-                              choices = unique(housing$NAME),
-                              selected = NULL)
-                )
-              ),
-              mainPanel(
-                plotOutput("home_plot", height = "600px")
-              )
-            )
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              width = 425,
-              bg = "lightgrey",
-              selectInput(
-                "homes_var_col", 
-                label = "Select a Variable to Explore",
-                choices = homes_variables
-              ),
+    nav_panel(
+      "Housing",
+      card(
+        card_header(class = "bg-primary", "State Homes"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Vermont has some of the oldest housing stock in the country. 
+                A quarter of homes were built before 1940. 
+                Rates of housing construction were healthy in the 1970s and 
+                1980s relative to the needs of the population at the time. 
+                Vermont's current housing shortage is the result of decades of 
+                decelerating housing construction."),
+              p("Act 250 was passed in 1970"),
+              p("Less than 20% of Vermont's housing stock has been built in the last 20 years"),
+              checkboxInput("show_homes_county_view", "View by County", value = FALSE),
               conditionalPanel(
-                condition = "input.homes_var_col != 'Total Housing Units'",
-                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              ),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Median Home Value:"), "$348,000"),
-                div(class = "mb-2", strong("Median Gross Rent:"), "$1,348"),
-                div(class = "mb-2", strong("Occupied Housing Units:"), "65%"),
-                div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
-                div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
-                div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
+                condition = "input.show_homes_county_view == true",
+                selectInput("selected_homes_county", "Select a County",
+                            choices = unique(housing$NAME),
+                            selected = NULL)
               )
             ),
-            plotOutput("homes_county_map", click = "homes_map_click", height = "500px"),
-            conditionalPanel(
-              condition = "output.zoning_county_selected",
-              layout_columns(
-                col_widths = c(10, 2),
-                plotlyOutput("zoning_map"),
-                selectInput(
-                  "zoning_var_col",
-                  label = "Select a Variable to Explore",
-                  choices = zoning_variables
-                )
-              )
+            mainPanel(
+              plotOutput("home_plot", height = "600px")
             )
           )
-        ),
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
+            selectInput(
+              "homes_var_col", 
+              label = "Select a Variable to Explore",
+              choices = homes_variables
+            ),
+            conditionalPanel(
+              condition = "input.homes_var_col != 'Total Housing Units'",
+              checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+            ),
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+              div(class = "mb-2", strong("Median Home Value:"), "$348,000"),
+              div(class = "mb-2", strong("Median Gross Rent:"), "$1,348"),
+              div(class = "mb-2", strong("Occupied Housing Units:"), "65%"),
+              div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
+              div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
+              div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
+            ),
+            tags$div(style = "height: 150px;"),
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
+              selectInput(
+                "zoning_county",
+                label = "Select a County",
+                choices = unique(vt_map$NAME),
+                selected = "Addison"
+              ),
+              selectInput(
+                "zoning_town",
+                label = "Select a Town",
+                choices = county_town_association %>%
+                  filter(NAME == "Addison") %>%
+                  pull(TOWNNAMEMC),
+                selected = "Middlebury"
+              ),
+              selectInput(
+                "zoning_var_col",
+                label = "Select a Variable to Explore",
+                choices = zoning_variables,
+                selected = "1F Allowance"
+              )
+            )
+          ),
+          plotOutput("housing_map_plot", height = "1200px"),
+          leafletOutput("town_leaflet", height = "400px")
+        )
       )
     ),
     
@@ -291,10 +306,17 @@ ui <- page_fluid(
           card_body(
             sidebarLayout(
               sidebarPanel(
-                p("Jobs Placeholder Text")
+                p("Vermonters’ top economic concern is affordability. Demographics are the
+                  key factor increasing cost of living. According to the United Nations, a high dependency ratio
+                  indicates that the economically active population and the overall economy face a greater burden to support and
+                  provide the social services needed by children and by older persons who are often economically dependent.
+                  In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
+                  workforce and a healthy tax base to support demand on public services. While the overall population size has
+                  remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
+                  ),
               ),
               mainPanel(
-                plotOutput("jobs_plot", height = "600px")
+                plotOutput("jobs_plot", height = "500px")
               )
             )
           )
@@ -341,7 +363,7 @@ ui <- page_fluid(
                 div(class = "mb-2", "*indicates highest level of education at this level"),
               )
             ),
-              plotOutput("jobs_county_map", height = "500px")
+              plotOutput("jobs_county_map", height = "400px")
           )
         ),
         card(
@@ -352,7 +374,7 @@ ui <- page_fluid(
                 p("Dependency Ratio")
               ),
               mainPanel(
-                plotOutput("dependency_plot", height = "600px")
+                plotOutput("dependency_plot", height = "400px")
               )
             )
           )
@@ -361,16 +383,15 @@ ui <- page_fluid(
         card(
           card_header(class = "bg-primary", "Job Openings"),
           card_body(
-            plotOutput("job_opening_plot", height = "600px")
+            plotOutput("job_opening_plot", height = "400px")
           )
         ), 
         card(
           card_header(class = "bg-primary", "County Rankings"),
           card_body(
-            plotOutput("county_rank_plot", height = "600px")
+            plotOutput("county_rank_plot", height = "400px")
           )
         ),
-        
       )
     ),
     nav_panel(
@@ -419,7 +440,6 @@ ui <- page_fluid(
         )
       )
     )
-    
   )
 )
 
@@ -433,6 +453,8 @@ ui <- page_fluid(
 #### Server ####
 
 server <- function(input, output, session) {
+  
+  #### POPULATION PLOTS ####
   
   county_caps_df <- reactive({
     build_county_caps_df()
@@ -491,15 +513,65 @@ server <- function(input, output, session) {
     jobs_homes_index_scale(county_caps_df(), county = input$selected_county)
   })
   
+  #### HOUSING PLOTS ####
+  
   output$home_plot <- renderPlot({
     view_county <- isTRUE(input$show_homes_county_view)
-    
     if (view_county) {
       plot_county_housing(housing, input$selected_homes_county)
     } else {
     plot_state_housing(housing)
     }
+  })
+  
+  # Map interactivity functionality housing page
+  
+  observeEvent(input$zoning_county, {
+    towns <- county_town_association %>%
+      filter(NAME == input$zoning_county) %>%
+      pull(TOWNNAMEMC)
     
+    updateSelectInput(
+      session,
+      "zoning_town",
+      choices = towns,
+      selected = towns[1]
+    )
+  })
+
+  output$housing_map_plot <- renderPlot({
+
+    req(input$homes_var_col)
+    req(input$zoning_county)
+    show_diff <- isTRUE(input$show_natl_diff)
+    main_map <- plot_county_map_homes(df = vt_map,
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
+
+    county_town_map <- plot_county_map(town_level_df = town_map,
+                                       county_selection = input$zoning_county)
+
+    plot_grobs(main_map, county_town_map)
+  })
+  
+  output$town_leaflet <- renderLeaflet({
+    req(input$zoning_town)
+    plot_town_zoning(zoning_df = zoning,
+                     county_town_association = county_town_association,
+                     county_selection = input$zoning_county,
+                     town_selection = input$zoning_town,
+                     var_selected = input$zoning_var_col)
+  })
+  
+  
+  #### JOB PLOTS ####
+  
+  output$job_opening_plot <- renderPlot({
+    plot_job_opening_rate(job_opening_df)
+  })
+  
+  output$county_rank_plot <- renderPlot({
+    plot_rank(rank_df)
   })
   
   output$jobs_plot <- renderPlot({
@@ -513,59 +585,9 @@ server <- function(input, output, session) {
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
   })
-  
-  
-  # Zoning interactive map
-  output$homes_county_map <- renderPlot({
-    req(input$homes_var_col)
-    
-    show_diff <- isTRUE(input$show_natl_diff)
-    
-    plot_county_map_homes(df = vt_map, 
-                          county_col = input$homes_var_col,
-                          show_diff = show_diff)
-  })
-  
-  selected_zoning_county <- reactiveVal(NULL)
-  observeEvent(input$homes_map_click, {
-    click <- input$homes_map_click
-    if (is.null(click)) return()
-    
-    # Convert click to sf point
-    click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(vt_map))
-    
-    # Find which county was clicked
-    clicked_index <- st_intersects(click_point, vt_map, sparse = FALSE)
-    
-    if (any(clicked_index)) {
-      clicked_name <- vt_map$NAME[which(clicked_index)[1]]
-      selected_zoning_county(clicked_name)
-    }
-  })
-  output$zoning_county_selected <- reactive({
-    !is.null(selected_zoning_county())
-  })
-  outputOptions(output, "zoning_county_selected", suspendWhenHidden = FALSE)
-  
-  output$zoning_map <- renderPlotly({
-    req(selected_zoning_county())
-    plot_county_zoning(
-      zoning, 
-      county_selection = selected_zoning_county(), 
-      var_selected = input$zoning_var_col
-    )
-  })
-  
-  
-  output$job_opening_plot <- renderPlot({
-    plot_job_opening_rate(job_opening_df)
-  })
-  
-  output$county_rank_plot <- renderPlot({
-    plot_rank(rank_df)
-  })
 
 }
 
+#### run ####
 shinyApp(ui, server)
 
