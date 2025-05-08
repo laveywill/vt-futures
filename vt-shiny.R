@@ -24,7 +24,7 @@ pth <- getwd()
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
-source(paste0(pth, "/homes.R"))
+source(paste0(pth, "/housing.R"))
 source(paste0(pth, "/recommendation_model.R"))
 
 #### Global Variables ####
