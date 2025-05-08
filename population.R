@@ -136,7 +136,7 @@ jobs_homes_index_scale <- function(df, county) {
     annotate("text", x = 1, y = 0.8, label = "1 (Balanced)", hjust = 0.5, size = 5, family = "Georgia") +
     annotate("text", x = 2, y = 0.8, label = "2 (More jobs)", hjust = 1, size = 5, family = "Georgia") +
     
-    scale_fill_gradient(low = "lightgreen", high = "orange") +
+    scale_fill_gradient(low = "lightblue", high = "yellow") +
     
     scale_x_continuous(limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2)) +
     coord_cartesian(clip = "off") +

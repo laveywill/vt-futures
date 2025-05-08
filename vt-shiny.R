@@ -109,7 +109,7 @@ ui <- page_fluid(
     card_header(
       class = "bg-primary",
       tags$div(
-        style = "font-size: 28px; text-align: center; width: 100%;",
+        style = "font-size: 36px; text-align: center; width: 100%;",
         "Vermont Futures Project: Interactive Dashboard"
       )
     )
@@ -123,7 +123,7 @@ ui <- page_fluid(
       card_image(
         file = "vt-futures-logo.png",
         href = "https://vtfuturesproject.org/"
-      )
+      ),
     ),
   card(
     style = "width: 250px; height: 250px;",
@@ -131,12 +131,25 @@ ui <- page_fluid(
       file = "midd_math_stat.png",
       href = "https://www.middlebury.edu/college/academics/mathematics"
     )
+  ),
+),
+card_body(
+  p("Welcome to the Vermont Futures Project interactive dashboard! Click into the people, housing, and jobs
+    pages to learn more about these categories both at the state and county levels in Vermont. Check out the recommendations
+    page to explore our data-driven recommendations to steer each county towards a thriving economy.", style = "text-align: center; width: 50%; margin: 0 auto; font-size:24px")
+),
+card(
+  card_header(class = "bg-primary", "About the project"),
+  card_body(
+    p("This project is a collaboration between Vermont Futures Projet and the senior seminar for the statistics major
+    at Middlebury College. Will Lavey, Eujin Chae, Carly McAdam (all Middlebury '25), and Alex Lyford (Middlebury College Department of Statistics) 
+      worked with Kevin Chu to create this dashboard for VFP in spring 2025.", style = "width: 100%; font-size:16px")
   )
-)
+  )
 ),
 
   #### POPULALTION PAGE ####
-    nav_panel("Population",
+    nav_panel("People",
       layout_column_wrap(  
         width = 1,
         card(
@@ -203,140 +216,94 @@ ui <- page_fluid(
             ),
               plotOutput("pop_county_map", height = "500px")
           )
-        ),
-        card(
-          card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
-          card_body(
-            layout_sidebar(
-              sidebar = sidebar(
-                bg = "lightgrey",
-                width = "300px",
-                selectInput("selected_county", "Select a County:", 
-                            choices = NULL, 
-                            selected = NULL),
-                p("VFP has a goal of increasing Vermont’s population to 802,000
-           residents by 2035 by recruiting and retaining working-age people."),
-                p("Here, we can see the population goal for each county compared
-           with its current capacities for adding new population
-           in different areas."),
-                strong("Latent capacity:"),
-                p("The difference between the current population and the 
-                  maximum population that the county has supported historically"),
-                strong("School latency:"),
-                p("The difference between the current school enrollment and the 
-                  enrollment if the student-teacher ratio was increased to 18:1")
-              ),
-                plotOutput("county_plot", height = "600px"),
-                plotOutput("jobs_homes_gauge", height = "100px"),
-              p("The jobs-homes index is a measure of the ratio of jobs
-                to homes in a county. Counties that have a ratio less than 
-                1 have more homes than jobs. This usually means that most people
-                who work in the county are able to find housing there, and some
-                people commute outside of the county for work. Counties with a ratio
-                very close to 0 are known as `bedroom communities` because most
-                of the residents of the county do not work there -- there are many more
-                homes than jobs. On the other
-                hand, counties with a ratio greater than 1 have more jobs than
-                homes. Most workers have to commute into the county because 
-                there is not enough housing for everyone who works in the county.
-                This ratio can help us understand which counties are able to support
-                 an influx of population, and where counties can focus on development
-                to help support a population increase. For example, bedroom 
-                communities may want to work on adding jobs, while counties with
-                more jobs than housing would want to prioritize building housing.")
-            )
-          )
-        ),
+        )
       )
     ),
  
  #### HOUSING PAGE ####
     
-    nav_panel("Housing",
-      layout_column_wrap(
-        width = 1,
-        card(
-          card_header(class = "bg-primary", "State Homes"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Vermont has some of the oldest housing stock in the country. 
-                  A quarter of homes were built before 1940. 
-                  Rates of housing construction were healthy in the 1970s and 
-                  1980s relative to the needs of the population at the time. 
-                  Vermont's current housing shortage is the result of decades of 
-                  decelerating housing construction."),
-                p("Act 250 was passed in 1970"),
-                p("Less than 20% of Vermont's housing stock has been built in the last 20 years"),
-                checkboxInput("show_homes_county_view", "View by County", value = FALSE),
-                conditionalPanel(
-                  condition = "input.show_homes_county_view == true",
-                  selectInput("selected_homes_county", "Select a County",
-                              choices = unique(housing$NAME),
-                              selected = NULL)
-                )
-              ),
-              mainPanel(
-                plotOutput("home_plot", height = "600px")
-              )
-            )
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              width = 425,
-              bg = "lightgrey",
-              selectInput(
-                "homes_var_col", 
-                label = "Select a Variable to Explore",
-                choices = homes_variables
-              ),
+    nav_panel(
+      "Housing",
+      card(
+        card_header(class = "bg-primary", "State Homes"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Vermont has some of the oldest housing stock in the country. 
+                A quarter of homes were built before 1940. 
+                Rates of housing construction were healthy in the 1970s and 
+                1980s relative to the needs of the population at the time. 
+                Vermont's current housing shortage is the result of decades of 
+                decelerating housing construction."),
+              p("Act 250 was passed in 1970"),
+              p("Less than 20% of Vermont's housing stock has been built in the last 20 years"),
+              checkboxInput("show_homes_county_view", "View by County", value = FALSE),
               conditionalPanel(
-                condition = "input.homes_var_col != 'Total Housing Units'",
-                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              ),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Median Home Value:"), "$348,000"),
-                div(class = "mb-2", strong("Median Gross Rent:"), "$1,348"),
-                div(class = "mb-2", strong("Occupied Housing Units:"), "65%"),
-                div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
-                div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
-                div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
-              ),
-              tags$div(style = "height: 150px;"),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
-                selectInput(
-                  "zoning_county",
-                  label = "Select a County",
-                  choices = unique(vt_map$NAME),
-                  selected = "Addison"
-                ),
-                selectInput(
-                  "zoning_town",
-                  label = "Select a Town",
-                  choices = county_town_association %>%
-                    filter(NAME == "Addison") %>%
-                    pull(TOWNNAMEMC),
-                  selected = "Middlebury"
-                ),
-                selectInput(
-                  "zoning_var_col",
-                  label = "Select a Variable to Explore",
-                  choices = zoning_variables,
-                  selected = "1F Allowance"
-                )
+                condition = "input.show_homes_county_view == true",
+                selectInput("selected_homes_county", "Select a County",
+                            choices = unique(housing$NAME),
+                            selected = NULL)
               )
             ),
-            plotOutput("housing_map_plot", height = "1200px"),
-            
-            leafletOutput("town_leaflet", height = "400px")
+            mainPanel(
+              plotOutput("home_plot", height = "600px")
+            )
           )
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
+            selectInput(
+              "homes_var_col", 
+              label = "Select a Variable to Explore",
+              choices = homes_variables
+            ),
+            conditionalPanel(
+              condition = "input.homes_var_col != 'Total Housing Units'",
+              checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+            ),
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+              div(class = "mb-2", strong("Median Home Value:"), "$348,000"),
+              div(class = "mb-2", strong("Median Gross Rent:"), "$1,348"),
+              div(class = "mb-2", strong("Occupied Housing Units:"), "65%"),
+              div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
+              div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
+              div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
+            ),
+            tags$div(style = "height: 150px;"),
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
+              selectInput(
+                "zoning_county",
+                label = "Select a County",
+                choices = unique(vt_map$NAME),
+                selected = "Addison"
+              ),
+              selectInput(
+                "zoning_town",
+                label = "Select a Town",
+                choices = county_town_association %>%
+                  filter(NAME == "Addison") %>%
+                  pull(TOWNNAMEMC),
+                selected = "Middlebury"
+              ),
+              selectInput(
+                "zoning_var_col",
+                label = "Select a Variable to Explore",
+                choices = zoning_variables,
+                selected = "1F Allowance"
+              )
+            )
+          ),
+          plotOutput("housing_map_plot", height = "1200px"),
+          leafletOutput("town_leaflet", height = "400px")
         )
       )
     ),
@@ -352,10 +319,17 @@ ui <- page_fluid(
           card_body(
             sidebarLayout(
               sidebarPanel(
-                p("Jobs Placeholder Text")
+                p("Vermonters’ top economic concern is affordability. Demographics are the
+                  key factor increasing cost of living. According to the United Nations, a high dependency ratio
+                  indicates that the economically active population and the overall economy face a greater burden to support and
+                  provide the social services needed by children and by older persons who are often economically dependent.
+                  In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
+                  workforce and a healthy tax base to support demand on public services. While the overall population size has
+                  remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
+                  ),
               ),
               mainPanel(
-                plotOutput("jobs_plot", height = "600px")
+                plotOutput("jobs_plot", height = "500px")
               )
             )
           )
@@ -402,7 +376,7 @@ ui <- page_fluid(
                 div(class = "mb-2", "*indicates highest level of education at this level"),
               )
             ),
-              plotOutput("jobs_county_map", height = "500px")
+              plotOutput("jobs_county_map", height = "400px")
           )
         ),
         card(
@@ -413,7 +387,7 @@ ui <- page_fluid(
                 p("Dependency Ratio")
               ),
               mainPanel(
-                plotOutput("dependency_plot", height = "600px")
+                plotOutput("dependency_plot", height = "400px")
               )
             )
           )
@@ -422,19 +396,72 @@ ui <- page_fluid(
         card(
           card_header(class = "bg-primary", "Job Openings"),
           card_body(
-            plotOutput("job_opening_plot", height = "600px")
+            plotOutput("job_opening_plot", height = "400px")
           )
         ), 
         card(
           card_header(class = "bg-primary", "County Rankings"),
           card_body(
-            plotOutput("county_rank_plot", height = "600px")
+            plotOutput("county_rank_plot", height = "400px")
           )
         ),
+      )
+    ),
+    nav_panel(
+      "Recommendations",
+      card(
+        card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
+        card_body(
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              width = "300px",
+              selectInput("selected_county", "Select a County:", 
+                          choices = NULL, 
+                          selected = NULL),
+              p("VFP has a goal of increasing Vermont’s population to 802,000
+           residents by 2035 by recruiting and retaining working-age people."),
+              p("Here, we can see the population goal for each county compared
+           with its current capacities for adding new population
+           in different areas."),
+              strong("Latent capacity:"),
+              p("The difference between the current population and the 
+                  maximum population that the county has supported historically"),
+              strong("School latency:"),
+              p("The difference between the current school enrollment and the 
+                  enrollment if the student-teacher ratio was increased to 18:1")
+            ),
+            plotOutput("county_plot", height = "600px"),
+            plotOutput("jobs_homes_gauge", height = "100px"),
+            p("The jobs-homes index is a measure of the ratio of jobs
+                to homes in a county. Counties that have a ratio less than 
+                1 have more homes than jobs. This usually means that most people
+                who work in the county are able to find housing there, and some
+                people commute outside of the county for work. Counties with a ratio
+                very close to 0 are known as `bedroom communities` because most
+                of the residents of the county do not work there -- there are many more
+                homes than jobs. On the other
+                hand, counties with a ratio greater than 1 have more jobs than
+                homes. Most workers have to commute into the county because 
+                there is not enough housing for everyone who works in the county.
+                This ratio can help us understand which counties are able to support
+                 an influx of population, and where counties can focus on development
+                to help support a population increase. For example, bedroom 
+                communities may want to work on adding jobs, while counties with
+                more jobs than housing would want to prioritize building housing.")
+          )
+        )
       )
     )
   )
 )
+
+
+#### SUMMARY PAGE ####
+
+
+
+
 
 #### Server ####
 
