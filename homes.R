@@ -19,9 +19,9 @@ plot_county_housing <- function(full_df, county_selection) {
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
     coord_flip(ylim = c(0, maximum)) +
     scale_fill_manual(values = c(
-      "Owner" = "#00dca5",
+      "Seasonal or Vacant" = "#c4c4c4",
       "Renter" = "#18a0cd",
-      "Seasonal or Vacant" = "#c4c4c4"
+      "Owner" = "#00dca5"
     )) +
     scale_y_continuous(labels = scales::comma) +
     theme(

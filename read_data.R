@@ -491,7 +491,8 @@ get_zoning_data <- function() {
   list_out <- lapply(files, read_sf)
   
   out <- rbindlist(list_out, fill = TRUE) |> 
-    select(-`Bylaw Date`)
+    select(-`Bylaw Date`) |> 
+    mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
   
   return(out)
 }

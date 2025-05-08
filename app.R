@@ -53,35 +53,37 @@ zoning_variables = c(
   "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance"
 )
 
+
 #### Read in data ####
 census_variables <- get_census_variables()
 census_data <- census_data(year)
-
 state <- census_data$state
-
 county <- census_data$county
-
 town <- census_data$place
-
 natl <- census_data$natl
-
 collierFL <- census_data$collierFL
+# state <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"))
+# county <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"))
+# town <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"))
+# natl <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"))
+# collierFL <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"))
 
-
-housing <- get_housing_data(year)
-
+# housing <- get_housing_data(year)
+# zoning <- get_zoning_data()
+housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"))
+# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","))
 zoning <- get_zoning_data()
 
-
-labor_force_df <- get_lf_data()
-
-prime_age_df <- get_prime_age_data(labor_force_df)
-
-dependency_df <- get_dependency_data(labor_force_df)
-
-job_opening_df <- get_job_openings_data()
-
-county_job_opening_df <- get_county_job_openings_data()
+# labor_force_df <- get_lf_data()
+# prime_age_df <- get_prime_age_data(labor_force_df)
+# dependency_df <- get_dependency_data(labor_force_df)
+# job_opening_df <- get_job_openings_data()
+# county_job_opening_df <- get_county_job_openings_data()
+# rank_df <- get_rank_data()
+labor_force_df <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"))
+job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"))
+dependency_df <- read.csv(paste0(pth, "/data/generated_dfs/dependency_df.csv"))
+job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"))
 rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
@@ -109,7 +111,7 @@ ui <- page_fluid(
     card_header(
       class = "bg-primary",
       tags$div(
-        style = "font-size: 28px; text-align: center; width: 100%;",
+        style = "font-size: 36px; text-align: center; width: 100%;",
         "Vermont Futures Project: Interactive Dashboard"
       )
     )
@@ -123,7 +125,7 @@ ui <- page_fluid(
                   card_image(
                     file = "vt-futures-logo.png",
                     href = "https://vtfuturesproject.org/"
-                  )
+                  ),
                 ),
                 card(
                   style = "width: 250px; height: 250px;",
@@ -131,12 +133,25 @@ ui <- page_fluid(
                     file = "midd_math_stat.png",
                     href = "https://www.middlebury.edu/college/academics/mathematics"
                   )
+                ),
+              ),
+              card_body(
+                p("Welcome to the Vermont Futures Project interactive dashboard! Click into the people, housing, and jobs
+    pages to learn more about these categories both at the state and county levels in Vermont. Check out the recommendations
+    page to explore our data-driven recommendations to steer each county towards a thriving economy.", style = "text-align: center; width: 50%; margin: 0 auto; font-size:24px")
+              ),
+              card(
+                card_header(class = "bg-primary", "About the project"),
+                card_body(
+                  p("This project is a collaboration between Vermont Futures Projet and the senior seminar for the statistics major
+    at Middlebury College. Will Lavey, Eujin Chae, Carly McAdam (all Middlebury '25), and Alex Lyford (Middlebury College Department of Statistics) 
+      worked with Kevin Chu to create this dashboard for VFP in spring 2025.", style = "width: 100%; font-size:16px")
                 )
               )
     ),
     
     #### POPULALTION PAGE ####
-    nav_panel("Population",
+    nav_panel("People",
               layout_column_wrap(  
                 width = 1,
                 card(
@@ -203,50 +218,7 @@ ui <- page_fluid(
                     ),
                     plotOutput("pop_county_map", height = "500px")
                   )
-                ),
-                card(
-                  card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
-                  card_body(
-                    layout_sidebar(
-                      sidebar = sidebar(
-                        bg = "lightgrey",
-                        width = "300px",
-                        selectInput("selected_county", "Select a County:", 
-                                    choices = NULL, 
-                                    selected = NULL),
-                        p("VFP has a goal of increasing Vermont’s population to 802,000
-           residents by 2035 by recruiting and retaining working-age people."),
-                        p("Here, we can see the population goal for each county compared
-           with its current capacities for adding new population
-           in different areas."),
-                        strong("Latent capacity:"),
-                        p("The difference between the current population and the 
-                  maximum population that the county has supported historically"),
-                        strong("School latency:"),
-                        p("The difference between the current school enrollment and the 
-                  enrollment if the student-teacher ratio was increased to 18:1")
-                      ),
-                      plotOutput("county_plot", height = "600px"),
-                      plotOutput("jobs_homes_gauge", height = "100px"),
-                      p("The jobs-homes index is a measure of the ratio of jobs
-                to homes in a county. Counties that have a ratio less than 
-                1 have more homes than jobs. This usually means that most people
-                who work in the county are able to find housing there, and some
-                people commute outside of the county for work. Counties with a ratio
-                very close to 0 are known as `bedroom communities` because most
-                of the residents of the county do not work there -- there are many more
-                homes than jobs. On the other
-                hand, counties with a ratio greater than 1 have more jobs than
-                homes. Most workers have to commute into the county because 
-                there is not enough housing for everyone who works in the county.
-                This ratio can help us understand which counties are able to support
-                 an influx of population, and where counties can focus on development
-                to help support a population increase. For example, bedroom 
-                communities may want to work on adding jobs, while counties with
-                more jobs than housing would want to prioritize building housing.")
-                    )
-                  )
-                ),
+                )
               )
     ),
     
@@ -436,9 +408,62 @@ ui <- page_fluid(
           )
         ),
       )
+    ),
+    nav_panel(
+      "Recommendations",
+      card(
+        card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
+        card_body(
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              width = "300px",
+              selectInput("selected_county", "Select a County:", 
+                          choices = NULL, 
+                          selected = NULL),
+              p("VFP has a goal of increasing Vermont’s population to 802,000
+           residents by 2035 by recruiting and retaining working-age people."),
+              p("Here, we can see the population goal for each county compared
+           with its current capacities for adding new population
+           in different areas."),
+              strong("Latent capacity:"),
+              p("The difference between the current population and the 
+                  maximum population that the county has supported historically"),
+              strong("School latency:"),
+              p("The difference between the current school enrollment and the 
+                  enrollment if the student-teacher ratio was increased to 18:1")
+            ),
+            plotOutput("county_plot", height = "600px"),
+            plotOutput("jobs_homes_gauge", height = "100px"),
+            p("The jobs-homes index is a measure of the ratio of jobs
+                to homes in a county. Counties that have a ratio less than 
+                1 have more homes than jobs. This usually means that most people
+                who work in the county are able to find housing there, and some
+                people commute outside of the county for work. Counties with a ratio
+                very close to 0 are known as `bedroom communities` because most
+                of the residents of the county do not work there -- there are many more
+                homes than jobs. On the other
+                hand, counties with a ratio greater than 1 have more jobs than
+                homes. Most workers have to commute into the county because 
+                there is not enough housing for everyone who works in the county.
+                This ratio can help us understand which counties are able to support
+                 an influx of population, and where counties can focus on development
+                to help support a population increase. For example, bedroom 
+                communities may want to work on adding jobs, while counties with
+                more jobs than housing would want to prioritize building housing.")
+          )
+        )
+      )
     )
   )
 )
+
+
+#### SUMMARY PAGE ####
+
+
+
+
 
 #### Server ####
 

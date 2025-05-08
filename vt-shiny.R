@@ -62,16 +62,16 @@ census_variables <- get_census_variables()
 # town <- census_data$place
 # natl <- census_data$natl
 # collierFL <- census_data$collierFL
-state <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/state.csv")
-county <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/county.csv")
-# town <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/town.csv")
-natl <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/natl.csv")
-collierFL <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/collierFL.csv")
+state <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"), check.names = FALSE)
+county <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = FALSE)
+# town <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"), check.names = FALSE)
+natl <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = FALSE)
+collierFL <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = FALSE)
 
 # housing <- get_housing_data(year)
 # zoning <- get_zoning_data()
-housing <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/housing.csv")
-# zoning <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/zoning.csv", sep = ",")
+housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"), check.names = FALSE)
+# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","), check.names = FALSE)
 zoning <- get_zoning_data()
 
 # labor_force_df <- get_lf_data()
@@ -80,10 +80,10 @@ zoning <- get_zoning_data()
 # job_opening_df <- get_job_openings_data()
 # county_job_opening_df <- get_county_job_openings_data()
 # rank_df <- get_rank_data()
-labor_force_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/labor_force_df.csv")
-job_opening_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/job_opening_df.csv")
-dependency_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/dependency_df.csv")
-job_opening_df <- read.csv("/Users/Will/Documents/College/Senior/Spring/STAT711/vt-futures/data/generated_dfs/job_opening_df.csv")
+labor_force_df <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"), check.names = FALSE)
+job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"), check.names = FALSE)
+dependency_df <- read.csv(paste0(pth, "/data/generated_dfs/dependency_df.csv"), check.names = FALSE)
+job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"), check.names = FALSE)
 rank_df <- get_rank_data()
 
 state_age_data <- build_age_df(state)
@@ -118,111 +118,111 @@ ui <- page_fluid(
   ),
   navset_card_pill(
     nav_panel("Home Page",
-    div(  
-      style = "display: flex; justify-content: center; gap: 20px;",
-      card(
-      style = "width: 250px; height: 250px;",
-      card_image(
-        file = "vt-futures-logo.png",
-        href = "https://vtfuturesproject.org/"
-      ),
-    ),
-  card(
-    style = "width: 250px; height: 250px;",
-    card_image(
-      file = "midd_math_stat.png",
-      href = "https://www.middlebury.edu/college/academics/mathematics"
-    )
-  ),
-),
-card_body(
-  p("Welcome to the Vermont Futures Project interactive dashboard! Click into the people, housing, and jobs
+              div(  
+                style = "display: flex; justify-content: center; gap: 20px;",
+                card(
+                  style = "width: 250px; height: 250px;",
+                  card_image(
+                    file = "vt-futures-logo.png",
+                    href = "https://vtfuturesproject.org/"
+                  ),
+                ),
+                card(
+                  style = "width: 250px; height: 250px;",
+                  card_image(
+                    file = "midd_math_stat.png",
+                    href = "https://www.middlebury.edu/college/academics/mathematics"
+                  )
+                ),
+              ),
+              card_body(
+                p("Welcome to the Vermont Futures Project interactive dashboard! Click into the people, housing, and jobs
     pages to learn more about these categories both at the state and county levels in Vermont. Check out the recommendations
     page to explore our data-driven recommendations to steer each county towards a thriving economy.", style = "text-align: center; width: 50%; margin: 0 auto; font-size:24px")
-),
-card(
-  card_header(class = "bg-primary", "About the project"),
-  card_body(
-    p("This project is a collaboration between Vermont Futures Projet and the senior seminar for the statistics major
+              ),
+              card(
+                card_header(class = "bg-primary", "About the project"),
+                card_body(
+                  p("This project is a collaboration between Vermont Futures Projet and the senior seminar for the statistics major
     at Middlebury College. Will Lavey, Eujin Chae, Carly McAdam (all Middlebury '25), and Alex Lyford (Middlebury College Department of Statistics) 
       worked with Kevin Chu to create this dashboard for VFP in spring 2025.", style = "width: 100%; font-size:16px")
-  )
-  )
-),
-
-  #### POPULALTION PAGE ####
+                )
+              )
+    ),
+    
+    #### POPULALTION PAGE ####
     nav_panel("People",
-      layout_column_wrap(  
-        width = 1,
-        card(
-          card_header(class = "bg-primary", "State Population"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("In 2000, Vermont had a high proportion of prime working-age adults
+              layout_column_wrap(  
+                width = 1,
+                card(
+                  card_header(class = "bg-primary", "State Population"),
+                  card_body(
+                    sidebarLayout(
+                      sidebarPanel(
+                        p("In 2000, Vermont had a high proportion of prime working-age adults
           relative to the number of children and elderly. There were significantly
           more children than there are today. In 2023 (pictured right), Vermont's
           working-age population (25–49 years old) is much smaller relative to 
           the number of children and elderly."),
-                p("The fertility rate is too low to grow the future workforce and tax base. 
+                        p("The fertility rate is too low to grow the future workforce and tax base. 
           This demographic shift has led to an imbalance in the workforce, where
           the supply of working-age individuals is insufficient to meet the demand
           for labor."),
-                p("As a result, employers struggle to fill positions, which limits productivity 
+                        p("As a result, employers struggle to fill positions, which limits productivity 
           and economic growth. Consumers face reduced access to services like 
           childcare, dining, repairs, and healthcare."),
-                p("Growing the prime working-age population is essential to closing the 
+                        p("Growing the prime working-age population is essential to closing the 
           workforce gap, improving affordability, and strengthening communities 
           to better meet the needs of all Vermonters."),
-                checkboxInput("show_pop_county_view", "View by County", value = FALSE),
-                conditionalPanel(
-                  condition = "input.show_pop_county_view == true",
-                  selectInput("selected_pop_county", "Select a County",
-                              choices = unique(county_age_data$NAME),
-                              selected = NULL)
+                        checkboxInput("show_pop_county_view", "View by County", value = FALSE),
+                        conditionalPanel(
+                          condition = "input.show_pop_county_view == true",
+                          selectInput("selected_pop_county", "Select a County",
+                                      choices = unique(county_age_data$NAME),
+                                      selected = NULL)
+                        )
+                      ),
+                      
+                      mainPanel(
+                        plotOutput("age_plot", height = "600px")
+                      )
+                    )
+                  )
+                ),
+                card(
+                  card_header(class = "bg-primary", "County Level Exploration"),
+                  layout_sidebar(
+                    sidebar = sidebar(
+                      width = 425,
+                      bg = "lightgrey",
+                      selectInput(
+                        "pop_var_col", 
+                        label = "Select a Variable to Explore",
+                        choices = population_variables
+                      ),
+                      conditionalPanel(
+                        condition = "input.pop_var_col != 'Total Population'",
+                        checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
+                      ),
+                      card(
+                        class = "bg-light p-3 shadow-sm",
+                        card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+                        div(class = "mb-2", strong("Median age:"), "38.7"),
+                        div(class = "mb-2", strong("Male population:"), "49.5%"),
+                        div(class = "mb-2", strong("Female population:"), "50.5%"),
+                        div(class = "mb-2", strong("White population:"), "61%"),
+                        div(class = "mb-2", strong("Black or African American population:"), "14%"),
+                        div(class = "mb-2", strong("Asian population:"), "7%"),
+                        div(class = "mb-2", strong("Hispanic or Latino population:"), "19%")
+                      )
+                    ),
+                    plotOutput("pop_county_map", height = "500px")
+                  )
                 )
-              ),
-              
-              mainPanel(
-                plotOutput("age_plot", height = "600px")
               )
-            )
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              width = 425,
-              bg = "lightgrey",
-              selectInput(
-                "pop_var_col", 
-                label = "Select a Variable to Explore",
-                choices = population_variables
-              ),
-              conditionalPanel(
-                condition = "input.pop_var_col != 'Total Population'",
-                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              ),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Median age:"), "38.7"),
-                div(class = "mb-2", strong("Male population:"), "49.5%"),
-                div(class = "mb-2", strong("Female population:"), "50.5%"),
-                div(class = "mb-2", strong("White population:"), "61%"),
-                div(class = "mb-2", strong("Black or African American population:"), "14%"),
-                div(class = "mb-2", strong("Asian population:"), "7%"),
-                div(class = "mb-2", strong("Hispanic or Latino population:"), "19%")
-              )
-            ),
-              plotOutput("pop_county_map", height = "500px")
-          )
-        )
-      )
     ),
- 
- #### HOUSING PAGE ####
+    
+    #### HOUSING PAGE ####
     
     nav_panel(
       "Housing",
@@ -310,8 +310,8 @@ card(
       )
     ),
     
- #### JOBS PAGE #### 
- 
+    #### JOBS PAGE #### 
+    
     nav_panel(
       "Jobs",
       layout_column_wrap(
@@ -328,7 +328,7 @@ card(
                   In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
                   workforce and a healthy tax base to support demand on public services. While the overall population size has
                   remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
-                  ),
+                ),
               ),
               mainPanel(
                 plotOutput("jobs_plot", height = "500px")
@@ -378,7 +378,7 @@ card(
                 div(class = "mb-2", "*indicates highest level of education at this level"),
               )
             ),
-              plotOutput("jobs_county_map", height = "400px")
+            plotOutput("jobs_county_map", height = "400px")
           )
         ),
         card(
@@ -535,7 +535,7 @@ server <- function(input, output, session) {
     if (view_county) {
       plot_county_housing(housing, input$selected_homes_county)
     } else {
-    plot_state_housing(housing)
+      plot_state_housing(housing)
     }
   })
   
@@ -553,19 +553,19 @@ server <- function(input, output, session) {
       selected = towns[1]
     )
   })
-
+  
   output$housing_map_plot <- renderPlot({
-
+    
     req(input$homes_var_col)
     req(input$zoning_county)
     show_diff <- isTRUE(input$show_natl_diff)
     main_map <- plot_county_map_homes(df = vt_map,
-                          county_col = input$homes_var_col,
-                          show_diff = show_diff)
-
+                                      county_col = input$homes_var_col,
+                                      show_diff = show_diff)
+    
     county_town_map <- plot_county_map(town_level_df = town_map,
                                        county_selection = input$zoning_county)
-
+    
     plot_grobs(main_map, county_town_map)
   })
   
@@ -600,7 +600,7 @@ server <- function(input, output, session) {
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
   })
-
+  
 }
 
 #### run ####
