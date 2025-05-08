@@ -307,14 +307,34 @@ ui <- page_fluid(
                 div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
                 div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
               ),
-              selectInput(
-                "zoning_var_col",
-                label = "Select a Variable to Explore",
-                choices = zoning_variables,
-                selected = "1F Allowance"
+              tags$div(style = "height: 150px;"),
+              card(
+                class = "bg-light p-3 shadow-sm",
+                card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
+                selectInput(
+                  "zoning_county",
+                  label = "Select a County",
+                  choices = unique(vt_map$NAME),
+                  selected = "Addison"
+                ),
+                selectInput(
+                  "zoning_town",
+                  label = "Select a Town",
+                  choices = county_town_association %>%
+                    filter(NAME == "Addison") %>%
+                    pull(TOWNNAMEMC),
+                  selected = "Middlebury"
+                ),
+                selectInput(
+                  "zoning_var_col",
+                  label = "Select a Variable to Explore",
+                  choices = zoning_variables,
+                  selected = "1F Allowance"
+                )
               )
             ),
-            plotOutput("housing_map_plot", click = "map_click", height = "900px"),
+            plotOutput("housing_map_plot", height = "1200px"),
+            
             leafletOutput("town_leaflet", height = "400px")
           )
         )
@@ -491,55 +511,41 @@ server <- function(input, output, session) {
   })
   
   # Map interactivity functionality housing page
-  selected_zoning_county <- reactiveVal(NULL)
-  selected_zoning_town <- reactiveVal(NULL)
   
-  observeEvent(input$map_click, {
-    click <- input$map_click
-    if (is.null(click)) return()
+  observeEvent(input$zoning_county, {
+    towns <- county_town_association %>%
+      filter(NAME == input$zoning_county) %>%
+      pull(TOWNNAMEMC)
     
-    if (click$y > 600 && click$y <= 900) {
-      # Top map
-      click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(vt_map))
-      clicked_index <- st_intersects(click_point, vt_map, sparse = FALSE)
-      
-      if (any(clicked_index)) {
-        clicked_name <- vt_map$NAME[which(clicked_index)[1]]
-        selected_zoning_county(clicked_name)
-      }
-      
-    } else if (click$y > 300 && click$y <= 600) {
-      # Middle map
-      click_point <- st_sfc(st_point(c(click$x, click$y)), crs = st_crs(town_map))
-      clicked_index <- st_intersects(click_point, town_map, sparse = FALSE)
-      
-      if (any(clicked_index)) {
-        clicked_name <- town_map$TOWNNAMEMC[which(clicked_index)[1]]
-        selected_zoning_town(clicked_name)
-      }
-      
-    } 
+    updateSelectInput(
+      session,
+      "zoning_town",
+      choices = towns,
+      selected = towns[1]
+    )
   })
-    
+
   output$housing_map_plot <- renderPlot({
-    
+
     req(input$homes_var_col)
+    req(input$zoning_county)
     show_diff <- isTRUE(input$show_natl_diff)
-    main_map <- plot_county_map_homes(df = vt_map, 
+    main_map <- plot_county_map_homes(df = vt_map,
                           county_col = input$homes_var_col,
                           show_diff = show_diff)
-    
+
     county_town_map <- plot_county_map(town_level_df = town_map,
-                                       county_selection = selected_zoning_county())
-    
+                                       county_selection = input$zoning_county)
+
     plot_grobs(main_map, county_town_map)
   })
   
   output$town_leaflet <- renderLeaflet({
+    req(input$zoning_town)
     plot_town_zoning(zoning_df = zoning,
                      county_town_association = county_town_association,
-                     county_selection = selected_zoning_county(),
-                     town_selection = selected_zoning_town(),
+                     county_selection = input$zoning_county,
+                     town_selection = input$zoning_town,
                      var_selected = input$zoning_var_col)
   })
   
