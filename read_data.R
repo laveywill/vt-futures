@@ -517,9 +517,49 @@ get_rank_data <- function() {
 
 
 
+build_county_age_df <- function(df) {
+  
+  age <- df %>%
+    select(NAME, starts_with("B01001_")) |> 
+    pivot_longer(
+      cols = -NAME,
+      names_to = "age_group",
+      values_to = "population"
+    ) 
+  
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  proc <- age |> 
+    mutate(age_group = map_chr(age_group, function(code) {
+      matched <- keep(age_group_patterns, ~ str_detect(code, .x))
+      if (length(matched) > 0) names(matched)[1] else NA_character_
+    })) |> 
+    group_by(NAME, age_group) |> 
+    summarize(total_population = sum(population, na.rm = TRUE), .groups = "drop_last")
+  
+  return(proc)
+}
 
-<<<<<<< Updated upstream
-=======
 town_level_map <- function() {
   
   county_codes <- data.frame(num = c(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27),
@@ -531,4 +571,3 @@ town_level_map <- function() {
   
   return(vt_towns)
 }
->>>>>>> Stashed changes
