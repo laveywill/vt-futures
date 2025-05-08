@@ -100,9 +100,15 @@ clean_scale_zoning <- function(zoning_df) {
 plot_pop_recommendations <- function(scored_df) {
   
   df_long <- scored_df |> 
-    mutate(Difference = rescaled_pop - county.pop_goal)
+    mutate(difference = rescaled_pop - pop_goal) |> 
+    pivot_longer(
+      cols = c(pop_goal, difference),
+      names_to = "type",
+      values_to = "value"
+    )
   
-  scored_df |> 
-    mutate(Difference)
+  df_long |> 
+    ggplot() +
+    geom_col(aes(x = County, y = value, fill = type), position = "stack")
   
 }

@@ -84,7 +84,7 @@ census_data <- function(year) {
   county_census_data_raw <- getCensus(
     name = "acs/acs5",
     vintage = year,
-    vars = c("NAME", census_variables$code),
+    vars = c("NAME", census_variables$code, paste0("B01001_", str_pad(3:49, 3, pad="0"), "E")),
     region = "county:*",
     regionin = "state:50",
   ) 
