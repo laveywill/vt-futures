@@ -16,8 +16,11 @@ create_scaled_df <- function(weights = c(0.25, 0.25, 0.25, 0.25),
   county_cols <- joined_df |> select("County", "pop_goal", "population", "proportion")
   metrics <- joined_df[,5:length(names(joined_df))]
   
-  scored <- data.frame(county = county_cols,
-                    score = rowSums(mapply("*", metrics, weights)))
+  scored <- data.frame(County = county_cols[1],
+                       pop_goal = county_cols[2],
+                       population = county_cols[3],
+                       proportion = county_cols[4],
+                       score = rowSums(mapply("*", metrics, weights)))
   
   fx <- function(x) {
     (1/6) * x + 1
@@ -26,7 +29,7 @@ create_scaled_df <- function(weights = c(0.25, 0.25, 0.25, 0.25),
   out <- scored |> 
     mutate(
       scaled_score = fx(score),
-      adjusted_pop = scaled_score * (county.proportion*goal_increase),
+      adjusted_pop = scaled_score * (proportion*goal_increase),
       adj_pop_proportion = adjusted_pop / sum(adjusted_pop),
       rescaled_pop = floor(goal_increase * adj_pop_proportion)
     )
@@ -92,4 +95,14 @@ clean_scale_zoning <- function(zoning_df) {
     mutate(zoning_score = scale(zoning_score))
   
   return(final)
+}
+
+plot_pop_recommendations <- function(scored_df) {
+  
+  df_long <- scored_df |> 
+    mutate(Difference = rescaled_pop - county.pop_goal)
+  
+  scored_df |> 
+    mutate(Difference)
+  
 }
