@@ -109,7 +109,7 @@ ui <- page_fluid(
     card_header(
       class = "bg-primary",
       tags$div(
-        style = "font-size: 28px; text-align: center; width: 100%;",
+        style = "font-size: 36px; text-align: center; width: 100%;",
         "Vermont Futures Project: Interactive Dashboard"
       )
     )
@@ -123,7 +123,7 @@ ui <- page_fluid(
       card_image(
         file = "vt-futures-logo.png",
         href = "https://vtfuturesproject.org/"
-      )
+      ),
     ),
   card(
     style = "width: 250px; height: 250px;",
@@ -131,8 +131,21 @@ ui <- page_fluid(
       file = "midd_math_stat.png",
       href = "https://www.middlebury.edu/college/academics/mathematics"
     )
+  ),
+),
+card_body(
+  p("Welcome to the Vermont Futures Project interactive dashboard! Click into the people, housing, and jobs
+    pages to learn more about these categories both at the state and county levels in Vermont. Check out the recommendations
+    page to explore our data-driven recommendations to steer each county towards a thriving economy.", style = "text-align: center; width: 50%; margin: 0 auto; font-size:24px")
+),
+card(
+  card_header(class = "bg-primary", "About the project"),
+  card_body(
+    p("This project is a collaboration between Vermont Futures Projet and the senior seminar for the statistics major
+    at Middlebury College. Will Lavey, Eujin Chae, Carly McAdam (all Middlebury '25), and Alex Lyford (Middlebury College Department of Statistics) 
+      worked with Kevin Chu to create this dashboard for VFP in spring 2025.", style = "width: 100%; font-size:16px")
   )
-)
+  )
 ),
 
   #### POPULALTION PAGE ####

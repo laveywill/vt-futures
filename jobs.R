@@ -100,13 +100,14 @@ plot_lf_county <- function(labor_force_df, county) {
     theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 19),
       plot.subtitle = element_text(hjust = 0.5, size = 14, margin = margin(b = 10)),
+      text = element_text(family = "Georgia"),
       axis.text = element_text(color = "black"),
       axis.title.x = element_text(margin = margin(t = 10)),
       axis.title.y = element_blank(),
       legend.position = "top",
       legend.title = element_blank(),
       panel.grid.major.y = element_blank(),   
-      panel.grid.minor = element_blank()     
+      panel.grid.minor = element_blank() 
     )
   
   return(p)
