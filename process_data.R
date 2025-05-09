@@ -1,0 +1,124 @@
+
+build_age_df <- function(df) {
+  # Filter for age demographic data
+  age <- df %>%
+    select(starts_with("B01001_"))  %>%
+    summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
+  
+  age_long <- as.data.frame(t(age))
+  colnames(age_long) <- "population"
+  age_long$variable <- rownames(age_long) 
+  age_long$population <- as.numeric(age_long$population)  
+  
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  age_long$age_group <- sapply(age_long$variable, function(var) {
+    matched_group <- names(Filter(function(pattern) str_detect(var, pattern), age_group_patterns))
+    if (length(matched_group) > 0) return(matched_group) else return(NA)
+  })
+  
+  age_summary <- age_long %>%
+    group_by(age_group) %>%
+    summarise(total_population = sum(population, na.rm = TRUE)) %>%
+    filter(!is.na(age_group)) 
+  return(age_summary)
+}
+
+build_county_age_df <- function(df) {
+  
+  age <- df %>%
+    select(NAME, starts_with("B01001_")) |> 
+    pivot_longer(
+      cols = -NAME,
+      names_to = "age_group",
+      values_to = "population"
+    ) 
+  
+  # Age group pattern mapping
+  age_group_patterns <- list(
+    "Under 5 years" = "B01001_0(03|27)E",  
+    "5 to 9 years" = "B01001_0(04|28)E",  
+    "10 to 14 years" = "B01001_0(05|29)E",  
+    "15 to 19 years" = "B01001_0(06|07|30|31)E",  
+    "20 to 24 years" = "B01001_0(08|09|10|32|33|34)E",  
+    "25 to 29 years" = "B01001_0(11|35)E",  
+    "30 to 34 years" = "B01001_0(12|36)E",  
+    "35 to 39 years" = "B01001_0(13|37)E",  
+    "40 to 44 years" = "B01001_0(14|38)E",  
+    "45 to 49 years" = "B01001_0(15|39)E",  
+    "50 to 54 years" = "B01001_0(16|40)E",  
+    "55 to 59 years" = "B01001_0(17|41)E",  
+    "60 to 64 years" = "B01001_0(18|19|42|43)E",  
+    "65 to 69 years" = "B01001_0(20|21|44|45)E",  
+    "70 to 74 years" = "B01001_0(22|46)E",  
+    "75 to 79 years" = "B01001_0(23|47)E",  
+    "80 to 84 years" = "B01001_0(24|48)E",  
+    "85 years and over" = "B01001_0(25|49)E"
+  )
+  
+  proc <- age |> 
+    mutate(age_group = map_chr(age_group, function(code) {
+      matched <- keep(age_group_patterns, ~ str_detect(code, .x))
+      if (length(matched) > 0) names(matched)[1] else NA_character_
+    })) |> 
+    group_by(NAME, age_group) |> 
+    summarize(total_population = sum(population, na.rm = TRUE), .groups = "drop_last")
+  
+  return(proc)
+}
+
+process_prime_age_data <- function(labor_force_df) {
+  df <- labor_force_df %>%
+    filter(age_group== "age_25_to_34"|age_group == "age_35_to_44"|age_group == "age_45_to_54") %>% 
+    group_by(NAME) %>% 
+    summarise(prime_labor_pr = sum(labor_force_count)/sum(count)) %>% 
+    arrange(desc(prime_labor_pr))
+  
+  return(df)
+}
+
+process_dependency_data <- function(labor_force_df) {
+  
+  df <- labor_force_df %>%
+    group_by(NAME) %>%
+    summarise(
+      dependents = sum(count[age_group %in% c("age_0_to_14", "age_65_and_over")], na.rm = TRUE),
+      working_age = sum(count[age_group %in% c(
+        "age_16_to_24", "age_25_to_34", "age_35_to_44", 
+        "age_45_to_54", "age_55_to_64"
+      )], na.rm = TRUE),
+      dependency_ratio = dependents / working_age
+    )
+  
+  return(df)
+}
+
+process_housing_data <- function(housing_df) {
+  
+  housing_df$Tenure <- fct_rev(final_data$Tenure)
+  housing_df$Year_Built <- fct_rev(final_data$Year_Built)
+  
+  out <- housing_df
+  
+  return(out)
+}

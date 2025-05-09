@@ -22,6 +22,8 @@ library(gridExtra)
 
 pth <- getwd()
 source(paste0(pth, "/read_data.R"))
+source(paste0(pth, "/read_data.R"))
+source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
 source(paste0(pth, "/housing.R"))
@@ -56,35 +58,21 @@ zoning_variables = c(
 
 #### Read in data ####
 census_variables <- get_census_variables()
-# census_data <- census_data(year)
-# state <- census_data$state
-# county <- census_data$county
-# town <- census_data$place
-# natl <- census_data$natl
-# collierFL <- census_data$collierFL
-state <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"), check.names = FALSE)
-county <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = FALSE)
-# town <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"), check.names = FALSE)
-natl <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = FALSE)
-collierFL <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = FALSE)
+state <- read_state_data()
+county <- read_county_data()
+town <- read_town_data()
+natl <- read_natl_data()
+collierFL <- read_collier_data()
 
-housing <- get_housing_data(year)
-zoning <- get_zoning_data()
-# housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"))
-# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","), check.names = FALSE)
+housing <- read_housing_data(year)
+zoning <- read_zoning_data()
 
-
-# labor_force_df <- get_lf_data()
-# prime_age_df <- get_prime_age_data(labor_force_df)
-# dependency_df <- get_dependency_data(labor_force_df)
-# job_opening_df <- get_job_openings_data()
-# county_job_opening_df <- get_county_job_openings_data()
-# rank_df <- get_rank_data()
-labor_force_df <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"), check.names = FALSE)
-job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"), check.names = FALSE)
-dependency_df <- read.csv(paste0(pth, "/data/generated_dfs/dependency_df.csv"), check.names = FALSE)
-job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"), check.names = FALSE)
-rank_df <- get_rank_data()
+labor_force_df <- read_lf_data()
+prime_age_df <- process_prime_age_data(labor_force_df)
+dependency_df <- process_dependency_data(labor_force_df)
+job_opening_df <- read_job_openings_data()
+county_job_opening_df <- read_county_job_openings_data()
+rank_df <- read_rank_data()
 
 state_age_data <- build_age_df(state)
 county_age_data <- build_county_age_df(county)
