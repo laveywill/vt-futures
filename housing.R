@@ -190,7 +190,6 @@ plot_county_map_homes <- function(df, county_col, show_diff = FALSE) {
 }
 
 plot_county_map <- function(town_level_df, county_selection) {
-  # County map of towns in selected county
   
   if (is.null(county_selection)) {
     county_selection <- "Addison"
@@ -199,7 +198,7 @@ plot_county_map <- function(town_level_df, county_selection) {
   p <- town_level_df |> 
     filter(NAME == county_selection) |> 
     ggplot() +
-    geom_sf() + 
+    geom_sf(color = "darkgreen", size = 3, fill = "honeydew") + 
     geom_sf_label(aes(label = TOWNNAMEMC), nudge_y = -0.1, size = 5) +
     labs(title = paste0(county_selection, "\n")) +
     coord_sf(expand = FALSE) +
@@ -247,13 +246,6 @@ plot_town_zoning <- function(zoning_df, county_town_association, county_selectio
     addLegend("bottomright", pal = pal, values = df_filtered[[var_selected]], title = var_selected)
   
   return(p)
-}
-
-plot_grobs <- function(main_map, county_town_map) {
-  
-  grobs <- list(ggplotGrob(main_map), ggplotGrob(county_town_map))
-  
-  return(grid.arrange(grobs[[1]], grobs[[2]], ncol = 1))
 }
 
 

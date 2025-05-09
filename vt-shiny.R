@@ -268,8 +268,17 @@ ui <- page_fluid(
               div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
               div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
               div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
-            ),
-            tags$div(style = "height: 150px;"),
+            )
+          ),
+          plotOutput("housing_map_plot", height = "900px"),
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "Zoning Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
             card(
               class = "bg-light p-3 shadow-sm",
               card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
@@ -295,8 +304,8 @@ ui <- page_fluid(
               )
             )
           ),
-          plotOutput("housing_map_plot", height = "1200px"),
-          leafletOutput("town_leaflet", height = "400px")
+          plotOutput("county_town_map", height = "400px"),
+          leafletOutput("town_leaflet", height = "500px")
         )
       )
     ),
@@ -305,100 +314,97 @@ ui <- page_fluid(
     
     nav_panel(
       "Jobs",
-      layout_column_wrap(
-        width = 1,
-        card(
-          card_header(class = "bg-primary", "State Jobs"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Vermonters’ top economic concern is affordability. Demographics are the
-                  key factor increasing cost of living. According to the United Nations, a high dependency ratio
-                  indicates that the economically active population and the overall economy face a greater burden to support and
-                  provide the social services needed by children and by older persons who are often economically dependent.
-                  In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
-                  workforce and a healthy tax base to support demand on public services. While the overall population size has
-                  remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
-                ),
+      card(
+        card_header(class = "bg-primary", "State Jobs"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Vermonters’ top economic concern is affordability. Demographics are the
+                key factor increasing cost of living. According to the United Nations, a high dependency ratio
+                indicates that the economically active population and the overall economy face a greater burden to support and
+                provide the social services needed by children and by older persons who are often economically dependent.
+                In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
+                workforce and a healthy tax base to support demand on public services. While the overall population size has
+                remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
               ),
-              mainPanel(
-                plotOutput("jobs_plot", height = "500px")
-              )
+            ),
+            mainPanel(
+              plotOutput("jobs_plot", height = "500px")
             )
           )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              bg = "lightgrey",
-              selectInput("job_county_col", 
-                          label = "Select a County to Explore",
-                          choices = county$NAME)
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            bg = "lightgrey",
+            selectInput("job_county_col", 
+                        label = "Select a County to Explore",
+                        choices = county$NAME)
+          ),
+          plotOutput("jobs_county")
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
+            selectInput(
+              "jobs_var_col", 
+              label = "Select a Variable to Explore",
+              choices = jobs_variables
             ),
-            plotOutput("jobs_county")
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              width = 425,
-              bg = "lightgrey",
-              selectInput(
-                "jobs_var_col", 
-                label = "Select a Variable to Explore",
-                choices = jobs_variables
-              ),
-              conditionalPanel(
-                condition = "input.jobs_var_col != `Labor Force`",
-                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              ),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
-                div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
-                div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
-                div(class = "mb-2", strong("Master's Degree*:"), "9.4%"),
-                div(class = "mb-2", strong("Doctorate Degree*:"), "2.1%"),
-                div(class = "mb-2", strong("Professional School Degree*:"), "1.5%"),
-                div(class = "mb-2", strong("Workers Who Drive Alone:"), "77%"),
-                div(class = "mb-2", strong("Workers Using Public Transport:"), "5%"),
-                div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
-                div(class = "mb-2", "*indicates highest level of education at this level"),
-              )
+            conditionalPanel(
+              condition = "input.jobs_var_col != `Labor Force`",
+              checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
             ),
-            plotOutput("jobs_county_map", height = "400px")
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "Dependency Ratio"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Dependency Ratio")
-              ),
-              mainPanel(
-                plotOutput("dependency_plot", height = "400px")
-              )
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+              div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
+              div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
+              div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
+              div(class = "mb-2", strong("Master's Degree*:"), "9.4%"),
+              div(class = "mb-2", strong("Doctorate Degree*:"), "2.1%"),
+              div(class = "mb-2", strong("Professional School Degree*:"), "1.5%"),
+              div(class = "mb-2", strong("Workers Who Drive Alone:"), "77%"),
+              div(class = "mb-2", strong("Workers Using Public Transport:"), "5%"),
+              div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
+              div(class = "mb-2", "*indicates highest level of education at this level"),
+            )
+          ),
+          plotOutput("jobs_county_map", height = "400px")
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "Dependency Ratio"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Dependency Ratio")
+            ),
+            mainPanel(
+              plotOutput("dependency_plot", height = "400px")
             )
           )
-        ),
-        
-        card(
-          card_header(class = "bg-primary", "Job Openings"),
-          card_body(
-            plotOutput("job_opening_plot", height = "400px")
-          )
-        ), 
-        card(
-          card_header(class = "bg-primary", "County Rankings"),
-          card_body(
-            plotOutput("county_rank_plot", height = "400px")
-          )
-        ),
-      )
+        )
+      ),
+      
+      card(
+        card_header(class = "bg-primary", "Job Openings"),
+        card_body(
+          plotOutput("job_opening_plot", height = "400px")
+        )
+      ), 
+      card(
+        card_header(class = "bg-primary", "County Rankings"),
+        card_body(
+          plotOutput("county_rank_plot", height = "400px")
+        )
+      ),
     ),
     nav_panel(
       "Recommendations",
@@ -546,16 +552,16 @@ server <- function(input, output, session) {
   output$housing_map_plot <- renderPlot({
     
     req(input$homes_var_col)
-    req(input$zoning_county)
     show_diff <- isTRUE(input$show_natl_diff)
-    main_map <- plot_county_map_homes(df = vt_map,
-                                      county_col = input$homes_var_col,
-                                      show_diff = show_diff)
-    
-    county_town_map <- plot_county_map(town_level_df = town_map,
-                                       county_selection = input$zoning_county)
-    
-    plot_grobs(main_map, county_town_map)
+    plot_county_map_homes(df = vt_map,
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
+  })
+  
+  output$county_town_map <- renderPlot({
+    req(input$zoning_county)
+    plot_county_map(town_level_df = town_map,
+                    county_selection = input$zoning_county)
   })
   
   output$town_leaflet <- renderLeaflet({
