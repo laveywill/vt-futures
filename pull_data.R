@@ -292,3 +292,16 @@ pull_housing_data <- function(year = 2023) {
   
   return(out)
 }
+
+pull_total_pop_county_data <- function(year = 2020) {
+  
+  out <- getCensus(
+    name = "acs/acs5",
+    vintage = 2020,
+    vars = c("NAME", "B01001_001E"),
+    region = "county:*",
+    regionin = "state:50"
+  )
+
+  return(out)
+}

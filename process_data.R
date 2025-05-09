@@ -115,8 +115,8 @@ process_dependency_data <- function(labor_force_df) {
 
 process_housing_data <- function(housing_df) {
   
-  housing_df$Tenure <- fct_rev(final_data$Tenure)
-  housing_df$Year_Built <- fct_rev(final_data$Year_Built)
+  housing_df$Tenure <- fct_rev(housing_df$Tenure)
+  housing_df$Year_Built <- fct_rev(housing_df$Year_Built)
   
   out <- housing_df
   

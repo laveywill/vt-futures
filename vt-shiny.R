@@ -21,8 +21,8 @@ library(purrr)
 library(gridExtra)
 
 pth <- getwd()
-source(paste0(pth, "/read_data.R"))
-source(paste0(pth, "/read_data.R"))
+# source(paste0(pth, "/pull_data.R"))
+source(paste0(pth, "/process_data.R"))
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
@@ -31,7 +31,6 @@ source(paste0(pth, "/recommendation_model.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
-Sys.setenv(MAPBOX_TOKEN = "")
 year <- 2023
 state_fips <- 50
 
@@ -62,9 +61,11 @@ state <- read_state_data()
 county <- read_county_data()
 town <- read_town_data()
 natl <- read_natl_data()
-collierFL <- read_collier_data()
+collierFL <- read_collierFL_data()
+county_pop_df <- read_county_pop_data()
 
-housing <- read_housing_data(year)
+housing <- read_housing_data() |> 
+  process_housing_data()
 zoning <- read_zoning_data()
 
 labor_force_df <- read_lf_data()
@@ -74,12 +75,14 @@ job_opening_df <- read_job_openings_data()
 county_job_opening_df <- read_county_job_openings_data()
 rank_df <- read_rank_data()
 
+vt_map <- county_level_map(county)
+town_map <- town_level_map()
+
+# Process Data #
 state_age_data <- build_age_df(state)
 county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
-vt_map <- county_level_map(county)
-town_map <- town_level_map()
 county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
 
 theme <- bs_theme(
@@ -460,7 +463,7 @@ server <- function(input, output, session) {
   #### POPULATION PLOTS ####
   
   county_caps_df <- reactive({
-    build_county_caps_df()
+    build_county_caps_df(county_pop_df)
   })
   
   observe({

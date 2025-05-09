@@ -47,17 +47,11 @@ town_level_map <- function() {
   return(vt_towns)
 }
 
-build_county_caps_df <- function(vt_pop = 624340) { # pulled at 2020 vintage acs
-  # pop <- getCensus(
-  #   name = "acs/acs5",
-  #   vintage = 2020,
-  #   vars = c("NAME", "B01001_001E"),
-  #   region = "county:*",
-  #   regionin = "state:50"
-  # )  
-  # vt_pop <- sum(pop$B01001_001E)
+build_county_caps_df <- function(pop_df) { # pulled at 2020 vintage acs
+
+  vt_pop <- sum(pop_df$B01001_001E)
   
-  pop <- pop %>% 
+  pop_df <- pop_df %>% 
     rename( "population" = "B01001_001E") %>%
     mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
            County = str_trim(str_remove(NAME, "County, Vermont"))
@@ -88,7 +82,7 @@ build_county_caps_df <- function(vt_pop = 624340) { # pulled at 2020 vintage acs
   county_caps <- 
     left_join(latent_cap, jobs_homes, by = "County") %>%
     left_join(school_latency, by = "County") %>%
-    left_join(pop, by = "County") %>% select (
+    left_join(pop_df, by = "County") %>% select (
       County, pop_goal, latent_cap, jobs_homes_index, latent_cap_school
     ) %>% 
     drop_na() 
@@ -128,26 +122,53 @@ read_county_job_openings_data <- function() {
 
 read_rank_data <- function() {
   out <- readRDS(paste0(pth, "/data/rank_df.rds"))
-  
   return(out)
 }
 
 read_state_data <- function() {
   out <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
 }
 
 read_county_data <- function() {
-  
+  out <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
 }
 
 read_town_data <- function() {
-  
+  out <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
+}
+
+read_natl_data <- function() {
+  out <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
+}
+
+read_collierFL_data <- function() {
+  out <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
 }
 
 read_housing_data <- function() {
-  
+  out <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
 }
 
 read_lf_data <- function() {
-  
+  out <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
+}
+
+read_county_pop_data <- function() {
+  out <- read.csv(paste0(pth, "/data/generated_dfs/county_pop_df.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  return(out)
 }

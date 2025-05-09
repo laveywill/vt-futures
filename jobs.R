@@ -1,5 +1,5 @@
-census_api_key("d2c6932eca5b04592aaa4b32840c534b274382dc", install = TRUE, overwrite = TRUE)
-readRenviron("~/.Renviron")
+# census_api_key("d2c6932eca5b04592aaa4b32840c534b274382dc", install = TRUE, overwrite = TRUE)
+# readRenviron("~/.Renviron")
 
 plot_lf_county <- function(labor_force_df, county) {
   
