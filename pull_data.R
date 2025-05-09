@@ -305,3 +305,36 @@ pull_total_pop_county_data <- function(year = 2020) {
 
   return(out)
 }
+
+make_dfs <- function() {
+  census <- pull_census_data()
+  state <- census$state
+  county <- census$county
+  town <- census$town
+  natl <- census$natl
+  collierFL <- census$collierFL
+  
+  lf <- pull_lf_data()
+  
+  housing <- pull_housing_data()
+  
+  county_pop <- pull_housing_data()
+  
+  out <- list(state,
+              county,
+              state,
+              town,
+              natl,
+              collierFL,
+              lf,
+              housing,
+              county_pop)
+  
+  return(out)
+}
+
+write_dfs <- function(dfs = list(), path_to_write) {
+  
+  lapply(dfs, function(df) {write.csv(df, paste0(path_to_write, "/", df, ".csv"))})
+  
+}

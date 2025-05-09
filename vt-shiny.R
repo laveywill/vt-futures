@@ -530,8 +530,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # Map interactivity functionality housing page
-  
   observeEvent(input$zoning_county, {
     towns <- county_town_association %>%
       filter(NAME == input$zoning_county) %>%
