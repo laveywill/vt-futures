@@ -19,9 +19,20 @@ library(plotly)
 library(geojsonsf)
 library(purrr)
 library(gridExtra)
+library(googledrive)
+
+folder_id <- "12n9suUDVN7xsxzblbCsEY1zwJPmeY2KK"
+csv_files <- drive_ls(as_id(folder_id), type = "csv")
+data_list <- lapply(csv_files$id, function(file_id) {
+  temp_path <- tempfile(fileext = ".csv")
+  drive_download(as_id(file_id), path = temp_path, overwrite = TRUE)
+  read_csv(temp_path)
+})
+names(data_list) <- csv_files$name
 
 pth <- getwd()
 # source(paste0(pth, "/pull_data.R"))
+# url <- "https://drive.google.com/uc?export=download&id="
 source(paste0(pth, "/process_data.R"))
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
@@ -69,8 +80,7 @@ housing <- read_housing_data() |>
 zoning <- read_zoning_data()
 
 labor_force_df <- read_lf_data()
-prime_age_df <- process_prime_age_data(labor_force_df)
-dependency_df <- process_dependency_data(labor_force_df)
+
 job_opening_df <- read_job_openings_data()
 county_job_opening_df <- read_county_job_openings_data()
 rank_df <- read_rank_data()
@@ -78,12 +88,17 @@ rank_df <- read_rank_data()
 vt_map <- county_level_map(county)
 town_map <- town_level_map()
 
-# Process Data #
+#### Process data ####
 state_age_data <- build_age_df(state)
 county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
+
+prime_age_df <- process_prime_age_data(labor_force_df)
+dependency_df <- process_dependency_data(labor_force_df)
+
+#### UI #### 
 
 theme <- bs_theme(
   primary = "darkgreen", secondary = "#2c3e50",
@@ -91,8 +106,6 @@ theme <- bs_theme(
   heading_font = c("Georgia", "sans-serif"),
   "input-border-color" = "darkgreen"
 )
-
-#### UI #### 
 
 #### HOME PAGE ####
 

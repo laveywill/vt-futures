@@ -71,8 +71,10 @@ build_county_caps_df <- function(pop_df) { # pulled at 2020 vintage acs
     summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
     mutate(County = str_trim(str_remove(County, "County")))
   
-  school_latency <- 
-    read_excel(paste0(pth, "/data/teacher_information.xlsx")) %>%
+  school_latency_raw <- read.csv(paste0(pth, "/data/generated_dfs/teacher_information.csv"), check.names = F)
+  school_latency <- school_latency_raw[names(school_latency_raw) != ""]
+  
+  school_latency <- school_latency %>%
     mutate(latent_cap_school = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
     distinct(County, school_district, latent_cap_school) %>% 
     group_by(County) %>%
@@ -90,38 +92,30 @@ build_county_caps_df <- function(pop_df) { # pulled at 2020 vintage acs
 }
 
 read_zoning_data <- function() {
-  
-  directory_path <- paste0(pth, "/data/zoning_data")
-  
-  files <- list.files(directory_path, full.names = T)
-  
-  list_out <- lapply(files, read_sf)
-  
-  out <- rbindlist(list_out, fill = TRUE) |> 
-    select(-`Bylaw Date`) |> 
-    mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
-  
+  out <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv"), check.names = F)
+  out <- out[names(out) != ""]
   return(out)
 }
 
 read_job_openings_data <- function() {
   
-  directory_path <- paste0(pth, "/data/job_openings_long.csv")
-  
-  out <- read.csv(directory_path) %>% 
+  out <- read.csv(paste0(pth, "/data/generated_dfs/job_openings_long.csv"), check.names = F)
+  out <- out[names(out) != ""]
+  out <- out %>% 
     mutate(date = as.Date(date, format = "%Y-%m-%d"))
   
   return(out)
 }
 
 read_county_job_openings_data <- function() {
-  out <- readRDS(paste0(pth, "/data/county_job_opening.rds"))
-  
+  out <- readRDS(paste0(pth, "/data/generated_dfs/county_job_opening_df.csv"), check.names = F)
+  out <- out[names(out) != ""]
   return(out)
 }
 
 read_rank_data <- function() {
-  out <- readRDS(paste0(pth, "/data/rank_df.rds"))
+  out <- readRDS(paste0(pth, "/data/generated_dfs/rank_df.csv"), check.names = F)
+  out <- out[names(out) != ""]
   return(out)
 }
 
