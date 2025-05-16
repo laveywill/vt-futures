@@ -4,20 +4,15 @@ library(leaflet)
 library(sf)
 library(tidyverse)
 library(tigris)
-library(censusapi)
-library(tidycensus)
 library(bslib)
 library(scales)
 library(readxl)
 library(DT)
-library(readxl)
 library(shinydashboard)
 library(rlang)
 library(forcats)
 library(data.table)
 library(plotly)
-library(geojsonsf)
-library(purrr)
 library(gridExtra)
 
 pth <- getwd()
@@ -47,7 +42,7 @@ homes_variables = c(
 jobs_variables = c(
   "Labor Force", "Unemployed Population", 
   "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
-  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
+  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport"
 )
 
 zoning_variables = c(
