@@ -14,9 +14,9 @@ library(forcats)
 library(data.table)
 library(plotly)
 library(gridExtra)
+library(googledrive)
 
 pth <- getwd()
-# source(paste0(pth, "/pull_data.R"))
 source(paste0(pth, "/process_data.R"))
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
@@ -51,34 +51,49 @@ zoning_variables = c(
 
 
 #### Read in data ####
+
+folder_id <- "1IlANNyHgUhrQPuZXcgKt00Kl1vo3G3mF"
+all_files <- drive_ls(as_id(folder_id))
+
+csv_files <- all_files[grepl("\\.csv$", all_files$name), ]
+geojson_files <- all_files[grepl("\\.geojson$", all_files$name), ]
+sf_files <- all_files[!grepl("\\.csv$|\\.geojson$", all_files$name), ]
+
 census_variables <- get_census_variables()
-state <- read_state_data()
-county <- read_county_data()
-town <- read_town_data()
-natl <- read_natl_data()
-collierFL <- read_collierFL_data()
-county_pop_df <- read_county_pop_data()
 
-housing <- read_housing_data() |> 
+csv_list <- get_csv_data(csv_files)
+state <- csv_list$state
+county <- csv_list$county
+town <- csv_list$town
+natl <- csv_list$natl
+collierFL <- csv_list$collierFL
+county_pop_df <- csv_list$county_pop_df
+
+housing <- csv_list$housing |> 
   process_housing_data()
-zoning <- read_zoning_data()
+zoning <- get_zoning_data(geojson_files)
 
-labor_force_df <- read_lf_data()
-prime_age_df <- process_prime_age_data(labor_force_df)
-dependency_df <- process_dependency_data(labor_force_df)
-job_opening_df <- read_job_openings_data()
-county_job_opening_df <- read_county_job_openings_data()
-rank_df <- read_rank_data()
+labor_force_df <- csv_list$labor_force_df
 
-vt_map <- county_level_map(county)
-town_map <- town_level_map()
+job_openings_long <- process_job_opening_df(csv_list$job_openings_long)
+county_job_opening_df <- csv_list$county_job_opening_df
+rank_df <- csv_list$rank_df
 
-# Process Data #
+sf_list <- get_sf_data(sf_files)
+vt_map <- county_level_map(sf_list$county, county)
+town_map <- town_level_map(sf_list$town)
+
+#### Process data ####
 state_age_data <- build_age_df(state)
 county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
 county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
+
+prime_age_df <- process_prime_age_data(labor_force_df)
+dependency_df <- process_dependency_data(labor_force_df)
+
+#### UI #### 
 
 theme <- bs_theme(
   primary = "darkgreen", secondary = "#2c3e50",
@@ -86,8 +101,6 @@ theme <- bs_theme(
   heading_font = c("Georgia", "sans-serif"),
   "input-border-color" = "darkgreen"
 )
-
-#### UI #### 
 
 #### HOME PAGE ####
 
@@ -464,7 +477,10 @@ server <- function(input, output, session) {
   #### POPULATION PLOTS ####
   
   county_caps_df <- reactive({
-    build_county_caps_df(county_pop_df)
+    build_county_caps_df(county_pop_df, 
+                         csv_list$latent_capacity, 
+                         csv_list$JobsHomesMap_data_formatted,
+                         csv_list$teacher_information)
   })
   
   observe({
@@ -572,7 +588,7 @@ server <- function(input, output, session) {
   #### JOB PLOTS ####
   
   output$job_opening_plot <- renderPlot({
-    plot_job_opening_rate(job_opening_df)
+    plot_job_opening_rate(csv_list$job_openings_long)
   })
   
   output$county_rank_plot <- renderPlot({

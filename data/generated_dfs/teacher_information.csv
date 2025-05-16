@@ -1,0 +1,263 @@
+"","County","Town","school_district","num_teachers","student_teacher_ratio"
+"1","Addison","Bridport","Addison Central Unified School District",146,12.2
+"2","Addison","Cornwall","Addison Central Unified School District",146,12.2
+"3","Addison","Middlebury","Addison Central Unified School District",146,12.2
+"4","Addison","Ripton","Addison Central Unified School District",146,12.2
+"5","Addison","Salisbury","Addison Central Unified School District",146,12.2
+"6","Addison","Shoreham","Addison Central Unified School District",146,12.2
+"7","Addison","Weybridge","Addison Central Unified School District",146,12.2
+"8","Addison","Addison","Addison Northwest Unified School District",87,10.5
+"9","Addison","Ferrisburgh","Addison Northwest Unified School District",87,10.5
+"10","Addison","Panton","Addison Northwest Unified School District",87,10.5
+"11","Addison","Vergennes","Addison Northwest Unified School District",87,10.5
+"12","Addison","Waltham","Addison Northwest Unified School District",87,10.5
+"13","Grand Isle","Alburgh","Alburg School District",14,13.6
+"14","Bennington","Arlington","Arlington School District",35,12
+"15","Windsor","Barnard","Barnard School District",6,12
+"16","Washington","Barre (city)","Barre Unified Union School District",200,11.1
+"17","Rutland","Chittenden","Barstow Unified Union School District",13,15.2
+"18","Rutland","Mendon","Barstow Unified Union School District",13,15.2
+"19","Windham","Athens","Bellows Falls Union High School District",31,10.5
+"20","Windham","Grafton","Bellows Falls Union High School District",31,10.5
+"21","Windham","Rockingham","Bellows Falls Union High School District",31,10.5
+"22","Windham","Westminster","Bellows Falls Union High School District",31,10.5
+"23","Caledonia","Groton","Blue Mountain Union School District",36,11.4
+"24","Caledonia","Ryegate","Blue Mountain Union School District",36,11.4
+"25","Caledonia","Wells River","Blue Mountain Union School District",36,11.4
+"26","Essex","Brighton","Brighton School District",10,13.9
+"27","Chittenden","Burlington","Burlington School District",313,11.2
+"28","Washington","Cabot","Cabot School District",20,8.2
+"29","Caledonia","Barnet","Caledonia Cooperative School District",43,12.7
+"30","Caledonia","Walden","Caledonia Cooperative School District",43,12.7
+"31","Caledonia","Waterford","Caledonia Cooperative School District",43,12.7
+"32","Lamoille","Cambridge","Cambridge School District",30,11.1
+"33","Essex","Canaan","Canaan School District",26,6.5
+"34","Grand Isle","Grand Isle","Champlain Islands Unified Union School District",19,10.7
+"35","Grand Isle","Isle La Motte","Champlain Islands Unified Union School District",19,10.7
+"36","Grand Isle","North Hero","Champlain Islands Unified Union School District",19,10.7
+"37","Chittenden","Charlotte","Champlain Valley Union School District",300,14.1
+"38","Chittenden","Hinesburg","Champlain Valley Union School District",300,14.1
+"39","Chittenden","Shelburne","Champlain Valley Union School District",300,14.1
+"40","Chittenden","St. George","Champlain Valley Union School District",300,14.1
+"41","Chittenden","Williston","Champlain Valley Union School District",300,14.1
+"42","Orleans","Charleston","Charleston School District",11,10.7
+"43","Chittenden","Colchester","Colchester School District",178,13.7
+"44","Orleans","Coventry","Coventry School District",11,11.7
+"45","Orleans","Craftsbury","Craftsbury School District",21,10
+"46","Caledonia","Danville","Danville School District",42,8.4
+"47","Orleans","Derby","Derby School District",32,15.6
+"48","Orange","Orange","Echo Valley Community School District",15,13.8
+"49","Orange","Washington","Echo Valley Community School District",15,13.8
+"50","Franklin","Enosburgh","Enosburgh-Richford Unified Union School District",93,11.5
+"51","Franklin","Richford","Enosburgh-Richford Unified Union School District",93,11.5
+"52","Essex","Essex","Essex Westford Unified Union School District",358,10.5
+"53","Essex","Westford","Essex Westford Unified Union School District",358,10.5
+"54","Franklin","Fairfax","Fairfax School District",82,12.8
+"55","Orange","Chelsea","First Branch Unified School District",23,13.3
+"56","Orange","Tunbridge","First Branch Unified School District",23,13.3
+"57","Franklin","Fletcher","Fletcher School District",10,11.8
+"58","Franklin","Georgia","Georgia School District",60,10.5
+"59","Windsor","Andover","Green Mountain Unified School District",54,12.7
+"60","Windsor","Baltimore","Green Mountain Unified School District",54,12.7
+"61","Windsor","Cavendish","Green Mountain Unified School District",54,12.7
+"62","Windsor","Chester","Green Mountain Unified School District",54,12.7
+"63","Windsor","Hartford","Hartford School District",168,8.6
+"64","Windsor","Hartland","Hartland School District",23,13.5
+"65","Washington","Duxbury","Harwood Union School District",166,10.9
+"66","Washington","Fayston","Harwood Union School District",166,10.9
+"67","Washington","Moretown","Harwood Union School District",166,10.9
+"68","Washington","Waitsfield","Harwood Union School District",166,10.9
+"69","Washington","Warren","Harwood Union School District",166,10.9
+"70","Washington","Waterbury","Harwood Union School District",166,10.9
+"71","Orleans","Greensboro","Hazen Union High School District",29,10.6
+"72","Orleans","Hardwick","Hazen Union High School District",29,10.6
+"73","Orleans","Woodbury","Hazen Union High School District",29,10.6
+"74","Orleans","Jay","Jay School District",5,14.8
+"75","Caledonia","Burke","Kingdom East Unified Union School District",120,14.5
+"76","Caledonia","Concord","Kingdom East Unified Union School District",120,14.5
+"77","Caledonia","Lunenburg","Kingdom East Unified Union School District",120,14.5
+"78","Caledonia","Lyndon","Kingdom East Unified Union School District",120,14.5
+"79","Caledonia","Newark","Kingdom East Unified Union School District",120,14.5
+"80","Caledonia","Sheffield","Kingdom East Unified Union School District",120,14.5
+"81","Caledonia","Sutton","Kingdom East Unified Union School District",120,14.5
+"82","Caledonia","Wheelock","Kingdom East Unified Union School District",120,14.5
+"83","Orleans","Albany","Lake Region Union Elementary-Middle School District",59,11.7
+"84","Orleans","Barton","Lake Region Union Elementary-Middle School District",59,11.7
+"85","Orleans","Brownington","Lake Region Union Elementary-Middle School District",59,11.7
+"86","Orleans","Glover","Lake Region Union Elementary-Middle School District",59,11.7
+"87","Orleans","Irasburg","Lake Region Union Elementary-Middle School District",59,11.7
+"88","Orleans","Westmore","Lake Region Union Elementary-Middle School District",59,11.7
+"89","Orleans","Albany","Lake Region Union High School District",32,11.1
+"90","Orleans","Barton","Lake Region Union High School District",32,11.1
+"91","Orleans","Brownington","Lake Region Union High School District",32,11.1
+"92","Orleans","Glover","Lake Region Union High School District",32,11.1
+"93","Orleans","Irasburg","Lake Region Union High School District",32,11.1
+"94","Orleans","Westmore","Lake Region Union High School District",32,11.1
+"95","Lamoille","Belvidere","Lamoille North Modified Union School District 58A",84,7.2
+"96","Lamoille","Eden","Lamoille North Modified Union School District 58A",84,7.2
+"97","Lamoille","Hyde Park","Lamoille North Modified Union School District 58A",84,7.2
+"98","Lamoille","Johnson","Lamoille North Modified Union School District 58A",84,7.2
+"99","Lamoille","Waterville","Lamoille North Modified Union School District 58A",84,7.2
+"100","Lamoille","Belvidere","Lamoille North Modified Union School District 58B",94,7.9
+"101","Lamoille","Cambridge","Lamoille North Modified Union School District 58B",94,7.9
+"102","Lamoille","Eden","Lamoille North Modified Union School District 58B",94,7.9
+"103","Lamoille","Hyde Park","Lamoille North Modified Union School District 58B",94,7.9
+"104","Lamoille","Johnson","Lamoille North Modified Union School District 58B",94,7.9
+"105","Lamoille","Waterville","Lamoille North Modified Union School District 58B",94,7.9
+"106","Lamoille","Elmore","Lamoille South Unified Union School District",131,12.3
+"107","Lamoille","Morristown","Lamoille South Unified Union School District",131,12.3
+"108","Lamoille","Stowe","Lamoille South Unified Union School District",131,12.3
+"109","Orleans","Lowell","Lowell School District",9,9.4
+"110","Windsor","Ludlow","Ludlow-Mount Holly Union School District",18,12.7
+"111","Windsor","Mount Holly","Ludlow-Mount Holly Union School District",18,12.7
+"112","Franklin","Fairfield","Maple Run Unified School District",246,10.8
+"113","Franklin","St. Albans (city)","Maple Run Unified School District",246,10.8
+"114","Franklin","St. Albans (town)","Maple Run Unified School District",246,10.8
+"115","Windham","Marlboro","Marlboro School District",8,12.7
+"116","Rutland","Pawlet","Metawee School District",15,15.5
+"117","Rutland","Rupert","Metawee School District",15,15.5
+"118","Rutlans","Clarendon","Mill River Unified Union School District",63,12.6
+"119","Rutlans","Shrewsbury","Mill River Unified Union School District",63,12.6
+"120","Rutlans","Tinmouth","Mill River Unified Union School District",63,12.6
+"121","Rutlans","Wallingford","Mill River Unified Union School District",63,12.6
+"122","Chittenden","Milton","Milton School District",139,10.6
+"123","Franklin","Franklin","Missisquoi Valley School District",176,10.5
+"124","Franklin","Highgate","Missisquoi Valley School District",176,10.5
+"125","Franklin","Swanton","Missisquoi Valley School District",176,10.5
+"126","Washington","Montpelier","Montpelier-Roxbury Unified School District",114,10.5
+"127","Washington","Roxbury","Montpelier-Roxbury Unified School District",114,10.5
+"128","Addison","Bristol","Mount Abraham Unified School District",102,12.5
+"129","Addison","Monkton","Mount Abraham Unified School District",102,12.5
+"130","Addison","New Haven","Mount Abraham Unified School District",102,12.5
+"131","Addison","Starksboro","Mount Abraham Unified School District",102,12.5
+"132","Bennington","Bennington","Mount Anthony Union High School District",100,13.7
+"133","Bennington","Pownal","Mount Anthony Union High School District",100,13.7
+"134","Bennington","Shaftsbury","Mount Anthony Union High School District",100,13.7
+"135","Bennington","Woodford","Mount Anthony Union High School District",100,13.7
+"136","Windsor","West Windsor","Mount Ascutney School District",52,12.5
+"137","Windsor","Windsor","Mount Ascutney School District",52,12.5
+"138","Chittenden","Bolton","Mount Mansfield Modified Union School District",182,14.4
+"139","Chittenden","Jericho","Mount Mansfield Modified Union School District",182,14.4
+"140","Chittenden","Richmond","Mount Mansfield Modified Union School District",182,14.4
+"141","Chittenden","Underhill","Mount Mansfield Modified Union School District",182,14.4
+"142","Chittenden","Huntington","Mount Mansfield Modified Union School District",182,14.4
+"143","Chittenden","Jericho","Mount Mansfield Modified Union School District",182,14.4
+"144","Chittenden","Richmond","Mount Mansfield Modified Union School District",182,14.4
+"145","Chittenden","Underhill","Mount Mansfield Modified Union School District",182,14.4
+"146","Orleans","Newport (city)","Newport City School District",26,11.9
+"147","Orleans","Newport (town)","Newport Town School District",26,11.9
+"148","Orleans","Derby","North Country Junior Union High School District",24,11.2
+"149","Orleans","Holland","North Country Junior Union High School District",24,11.2
+"150","Orleans","Jay","North Country Junior Union High School District",24,11.2
+"151","Orleans","Morgan","North Country Junior Union High School District",24,11.2
+"152","Orleans","Newport (city)","North Country Junior Union High School District",24,11.2
+"153","Essex","Brighton","North Country Senior Union High School District",66,10.5
+"154","Essex","Charleston","North Country Senior Union High School District",66,10.5
+"155","Essex","Derby","North Country Senior Union High School District",66,10.5
+"156","Essex","Holland","North Country Senior Union High School District",66,10.5
+"157","Essex","Jay","North Country Senior Union High School District",66,10.5
+"158","Essex","Lowell","North Country Senior Union High School District",66,10.5
+"159","Essex","Morgan","North Country Senior Union High School District",66,10.5
+"160","Essex","Newport (city)","North Country Senior Union High School District",66,10.5
+"161","Essex","Newport (town)","North Country Senior Union High School District",66,10.5
+"162","Essex","Troy","North Country Senior Union High School District",66,10.5
+"163","Essex","Westfield","North Country Senior Union High School District",66,10.5
+"164","Franklin","Bakersfield","Northern Mountain Valley Unified Union School District",73,11.5
+"165","Franklin","Berkshire","Northern Mountain Valley Unified Union School District",63,13.3
+"166","Franklin","Montgomery","Northern Mountain Valley Unified Union School District",63,13.3
+"167","Franklin","Sheldon","Northern Mountain Valley Unified Union School District",63,13.3
+"168","Windsor","Norwich","Norwich School District",33,10.7
+"169","Orange","Braintree","Orange Southwest Unified School District",85,10.1
+"170","Orange","Brookfield","Orange Southwest Unified School District",85,10.1
+"171","Orange","Randolph","Orange Southwest Unified School District",85,10.1
+"172","Rutland","Brandon","Otter Valley Unified Union School District",90,13.9
+"173","Rutland","Goshen","Otter Valley Unified Union School District",90,13.9
+"174","Rutland","Leicester","Otter Valley Unified Union School District",90,13.9
+"175","Rutland","Pittsford","Otter Valley Unified Union School District",90,13.9
+"176","Rutland","Sudbury","Otter Valley Unified Union School District",90,13.9
+"177","Rutland","Whiting","Otter Valley Unified Union School District",90,13.9
+"178","Orange","Bradford","Oxbow Unified Union School District",63,10.8
+"179","Orange","Newbury","Oxbow Unified Union School District",63,10.8
+"180","Washington","Northfield","Paine Mountain School District",79,13.4
+"181","Washington","Williamstown","Paine Mountain School District",79,13.4
+"182","Caledonia","Peacham","Peacham School District",7,12.9
+"183","Rutland","Poultney","Quarry Valley Unified Union School District",90,12.3
+"184","Rutland","Proctor","Quarry Valley Unified Union School District",90,12.3
+"185","Rutland","West Rutland","Quarry Valley Unified Union School District",90,12.3
+"186","Windham","Dover","River Valleys Unified School District",13,15.5
+"187","Windham","Wardsboro","River Valleys Unified School District",13,15.5
+"188","Windsor","Rochester","Rochester-Stockbridge Unified School District",14,9.9
+"189","Windsor","Stockbridge","Rochester-Stockbridge Unified School District",14,9.9
+"190","Windham","Rockingham","Rockingham School District",38,14.1
+"191","Rutland","Rutland (city)","Rutland City School District",155,13
+"192","Rutland","Rutland (town)","Rutland Town School District",27,14.8
+"193","Windsor","Sharon","Sharon School District",14,17.8
+"194","Rutland","Benson","Slate Valley Unified Union School District",98,13
+"195","Rutland","Castleton","Slate Valley Unified Union School District",98,13
+"196","Rutland","Fair Haven","Slate Valley Unified Union School District",98,13
+"197","Rutland","Hubbardton","Slate Valley Unified Union School District",98,13
+"198","Rutland","Orwell","Slate Valley Unified Union School District",98,13
+"199","Rutland","West Haven","Slate Valley Unified Union School District",98,13
+"200","Chittendedn","South Burlington","South Burlington School District",219,12.4
+"201","Grand Isle","South Hero","South Hero School District",12,11.7
+"202","Bennington","Bennington","Southwest Vermont Union Elementary School District",86,16.5
+"203","Bennington","Pownal","Southwest Vermont Union Elementary School District",86,16.5
+"204","Bennington","Shaftsbury","Southwest Vermont Union Elementary School District",86,16.5
+"205","Bennington","Woodford","Southwest Vermont Union Elementary School District",86,16.5
+"206","Windsor","Springfield","Springfield School District",93,13.4
+"207","Caledonia","St. Johnsbury","St. Johnsbury School District",55,19.6
+"208","Bennington","Stamford","Stamford School District",6,13.3
+"209","Orange","Strafford","Strafford School District",12,14
+"210","Rutland","Danby","Taconic and Green Regional School District",102,16
+"211","Rutland","Dorset","Taconic and Green Regional School District",102,16
+"212","Rutland","Landgrove","Taconic and Green Regional School District",102,16
+"213","Rutland","Londonderry","Taconic and Green Regional School District",102,16
+"214","Rutland","Manchester","Taconic and Green Regional School District",102,16
+"215","Rutland","Mount Tabor","Taconic and Green Regional School District",102,16
+"216","Rutland","Peru","Taconic and Green Regional School District",102,16
+"217","Rutland","Sunderland","Taconic and Green Regional School District",102,16
+"218","Rutland","Weston","Taconic and Green Regional School District",102,16
+"219","Orange","Thetford","Thetford School District",17,22.5
+"220","Orleans","Troy","Troy School District",13,14.6
+"221","Windham","Whitingham","Twin Valley Unified School District",37,10.2
+"222","Windham","Wilmington","Twin Valley Unified School District",37,10.2
+"223","Washington","Marshfield","Twinfield Union School District",38,8.4
+"224","Washington","Plainfield","Twinfield Union School District",38,8.4
+"225","Windham","Vernon","Vernon School District",18,11
+"226","Orange","Corinth","Waits River Valley Unified School District",19,16.7
+"227","Orange","Topsham","Waits River Valley Unified School District",19,16.7
+"228","Washington","Berlin","Washington Central Unified Union School District",118,12.1
+"229","Washington","Calais","Washington Central Unified Union School District",118,12.1
+"230","Washington","Montpelier","Washington Central Unified Union School District",118,12.1
+"231","Washington","Middlesex","Washington Central Unified Union School District",118,12.1
+"232","Washington","Worcester","Washington Central Unified Union School District",118,12.1
+"233","Windsor","Weathersfield","Weathersfield School District",18,15.3
+"234","Rutland","Middletown Springs","Wells Spring Unified Union School District",15,13.1
+"235","Rutland","Wells","Wells Spring Unified Union School District",15,13.1
+"236","Windham","Brookline","West River Modified Union School District",16,13.5
+"237","Windham","Jamaica","West River Modified Union School District",16,13.5
+"238","Windham","Newfane","West River Modified Union School District",16,13.5
+"239","Windham","Townshend","West River Modified Union School District",16,13.5
+"240","Windham","Jamaica","West River Modified Union School District",16,13.5
+"241","Windham","Newfane","West River Modified Union School District",16,13.5
+"242","Windham","Townshend","West River Modified Union School District",16,13.5
+"243","Windsor","Bethel","White River Unified District",67,9.4
+"244","Windsor","Royalton","White River Unified District",67,9.4
+"245","Windham","Athens","Windham Northeast Union Elementary School District",5,7.3
+"246","Windham","Grafton","Windham Northeast Union Elementary School District",5,7.3
+"247","Windham","Westminster","Windham Northeast Union Elementary School District",5,7.3
+"248","Windham","Windham","Windham School District",2,11
+"249","Windham","Brattleboro","Windham Southeast School District",233,9.9
+"250","Windham","Dummerston","Windham Southeast School District",233,9.9
+"251","Windham","Guilford","Windham Southeast School District",233,9.9
+"252","Windham","Putney","Windham Southeast School District",233,9.9
+"253","Windham","Vernon","Windham Southeast School District",233,9.9
+"254","Windsor","Barnard","Windsor Central Modified Union School District",0,0
+"255","Windsor","Bridgewater","Windsor Central Modified Union School District",134,12.2
+"256","Windsor","Killington","Windsor Central Modified Union School District",134,12.2
+"257","Windsor","Plymouth","Windsor Central Modified Union School District",134,12.2
+"258","Windsor","Pomfret","Windsor Central Modified Union School District",134,12.2
+"259","Windsor","Reading","Windsor Central Modified Union School District",134,12.2
+"260","Windsor","Woodstock","Windsor Central Modified Union School District",134,12.2
+"261","Chittendedn","Winooski","Winooski School District",82,9.8
+"262","Lamoille","Wolcott","Wolcott School District",9,14.6

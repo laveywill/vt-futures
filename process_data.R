@@ -122,3 +122,56 @@ process_housing_data <- function(housing_df) {
   
   return(out)
 }
+
+build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, teacher_info) {
+  
+  vt_pop <- sum(pop_df$B01001_001E)
+  
+  pop_df <- pop_df %>% 
+    rename( "population" = "B01001_001E") %>%
+    mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
+           County = str_trim(str_remove(NAME, "County, Vermont"))
+    ) %>% select(County, pop_goal)
+  
+  latent_cap <- 
+    latent_capacity_df %>%
+    rename(latent_cap = `Latent Capacity`) %>%
+    group_by(County) %>%
+    summarise(latent_cap = sum(latent_cap))
+  
+  jobs_homes <- 
+    jobs_homes_map_df %>%
+    drop_na() %>%
+    rename(jobs_homes_index = `Jobs-Homes Index`) %>%
+    group_by(County) %>%
+    summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
+    mutate(County = str_trim(str_remove(County, "County")))
+  
+  school_latency_raw <- teacher_info
+  school_latency <- school_latency_raw[names(school_latency_raw) != ""]
+  
+  school_latency <- school_latency %>%
+    mutate(latent_cap_school = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
+    distinct(County, school_district, latent_cap_school) %>% 
+    group_by(County) %>%
+    summarise(latent_cap_school = sum(latent_cap_school))  
+  
+  # Merge all datasets
+  county_caps <- 
+    left_join(latent_cap, jobs_homes, by = "County") %>%
+    left_join(school_latency, by = "County") %>%
+    left_join(pop_df, by = "County") %>% select (
+      County, pop_goal, latent_cap, jobs_homes_index, latent_cap_school
+    ) %>% 
+    drop_na() 
+  return(county_caps)
+}
+
+process_job_opening_df <- function(job_openings_long) {
+  out <- job_openings_long |> 
+    mutate(date = as.Date(date, format = "%Y-%m-%d"))
+  
+  return(out)
+}
+
+
