@@ -28,141 +28,149 @@ get_census_variables <- function() {
   return(census_variables)
 }
 
-county_level_map <- function(df){
-  counties_all <- st_read("data/cb_2022_us_county_500k.shp")
-  vt_counties <- counties_all[counties_all$STATEFP == "50", ]
-  vt_map <- left_join(vt_counties, df, by = "NAME")
+county_level_map <- function(county_shp_df, county_df){
+  vt_counties <- county_shp_df[county_shp_df$STATEFP == "50", ]
+  vt_map <- left_join(vt_counties, county_df, by = "NAME")
   return(vt_map)
 }
 
-town_level_map <- function() {
+town_level_map <- function(town_shp_df) {
   
   county_codes <- data.frame(num = c(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27),
                              NAME = c("Addison", "Bennington", "Caledonia", "Chittenden", "Essex", "Franklin", "Grand Isle",
                                       "Lamoille", "Orange", "Orleans", "Rutland", "Washington", "Windham", "Windsor"))
   
-  vt_towns <- st_read("data/VT_town_sf 2/FS_VCGI_OPENDATA_Boundary_BNDHASH_poly_towns_SP_v1.shp") |> 
-    left_join(county_codes, by = c("CNTY" = "num"))
+  vt_towns <- left_join(town_shp_df, county_codes, by = c("CNTY" = "num"))
   
   return(vt_towns)
 }
 
-build_county_caps_df <- function(pop_df) { # pulled at 2020 vintage acs
-
-  vt_pop <- sum(pop_df$B01001_001E)
+get_zoning_data <- function(geojson_files) {
   
-  pop_df <- pop_df %>% 
-    rename( "population" = "B01001_001E") %>%
-    mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
-           County = str_trim(str_remove(NAME, "County, Vermont"))
-    ) %>% select(County, pop_goal)
+  zoning_list <- lapply(geojson_files$id, function(file_id) {
+    temp_path <- tempfile(fileext = ".geojson")
+    drive_download(as_id(file_id), path = temp_path, overwrite = T)
+    out <- read_sf(temp_path)
+  })
   
-  latent_cap <- 
-    read_csv(paste0(pth, "/data/latent-capacity.csv"), show_col_types = F) %>%
-    rename(latent_cap = `Latent Capacity`) %>%
-    group_by(County) %>%
-    summarise(latent_cap = sum(latent_cap))
-  
-  jobs_homes <- 
-    read_csv(paste0(pth, "/data/JobsHomesMap_data_formatted.csv"), name_repair = make.names) %>%
-    drop_na() %>%
-    rename(jobs_homes_index = Jobs.Homes.Index) %>%
-    group_by(County) %>%
-    summarise(jobs_homes_index = mean(jobs_homes_index)) %>%
-    mutate(County = str_trim(str_remove(County, "County")))
-  
-  school_latency_raw <- read.csv(paste0(pth, "/data/generated_dfs/teacher_information.csv"), check.names = F)
-  school_latency <- school_latency_raw[names(school_latency_raw) != ""]
-  
-  school_latency <- school_latency %>%
-    mutate(latent_cap_school = (num_teachers*18)-(num_teachers*student_teacher_ratio)) %>%
-    distinct(County, school_district, latent_cap_school) %>% 
-    group_by(County) %>%
-    summarise(latent_cap_school = sum(latent_cap_school))  
-  
-  # Merge all datasets
-  county_caps <- 
-    left_join(latent_cap, jobs_homes, by = "County") %>%
-    left_join(school_latency, by = "County") %>%
-    left_join(pop_df, by = "County") %>% select (
-      County, pop_goal, latent_cap, jobs_homes_index, latent_cap_school
-    ) %>% 
-    drop_na() 
-  return(county_caps)
-}
-
-read_zoning_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
-
-read_job_openings_data <- function() {
-  
-  out <- read.csv(paste0(pth, "/data/generated_dfs/job_openings_long.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  out <- out %>% 
-    mutate(date = as.Date(date, format = "%Y-%m-%d"))
+  out <- rbindlist(zoning_list, fill = TRUE) |> 
+    select(-`Bylaw Date`) |> 
+    mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
   
   return(out)
 }
 
-read_county_job_openings_data <- function() {
-  out <- readRDS(paste0(pth, "/data/generated_dfs/county_job_opening_df.csv"), check.names = F)
-  out <- out[names(out) != ""]
+get_sf_data <- function(file_list) {
+  temp_dir <- tempdir()
+  
+  lapply(seq_len(nrow(file_list)), function(i) {
+    drive_download(as_id(file_list$id[i]),
+                   path = file.path(temp_dir, file_list$name[i]),
+                   overwrite = TRUE)
+  })
+  
+  shp_paths <- list.files(temp_dir, pattern = "\\.shp$", full.names = TRUE)
+  
+  out <- lapply(shp_paths, st_read)
+  names(out) <- c("county", "town")
+  
   return(out)
 }
 
-read_rank_data <- function() {
-  out <- readRDS(paste0(pth, "/data/generated_dfs/rank_df.csv"), check.names = F)
-  out <- out[names(out) != ""]
+get_csv_data <- function(file_list) {
+  
+  csv_list <- lapply(file_list$id, function(file_id) {
+    temp_path <- tempfile(fileext = ".csv")
+    drive_download(as_id(file_id), path = temp_path, overwrite = T)
+    out <- read.csv(temp_path, check.names = F)
+  })
+  
+  names(csv_list) <- gsub("\\.csv$", "", csv_files$name)
+  
+  out <- lapply(csv_list, function(df) {
+    df <- df[, names(df) != ""]
+    return(df)
+  })
+  
   return(out)
 }
 
-read_state_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
 
-read_county_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
 
-read_town_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
+# read_zoning_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_job_openings_data <- function() {
+#   
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/job_openings_long.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   out <- out %>% 
+#     mutate(date = as.Date(date, format = "%Y-%m-%d"))
+#   
+#   return(out)
+# }
+# 
+# read_county_job_openings_data <- function() {
+#   out <- readRDS(paste0(pth, "/data/generated_dfs/county_job_opening_df.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_rank_data <- function() {
+#   out <- readRDS(paste0(pth, "/data/generated_dfs/rank_df.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_state_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_county_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_town_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_natl_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_collierFL_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_housing_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_lf_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
+# 
+# read_county_pop_data <- function() {
+#   out <- read.csv(paste0(pth, "/data/generated_dfs/county_pop_df.csv"), check.names = F)
+#   out <- out[names(out) != ""]
+#   return(out)
+# }
 
-read_natl_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
 
-read_collierFL_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
-
-read_housing_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
-
-read_lf_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
-
-read_county_pop_data <- function() {
-  out <- read.csv(paste0(pth, "/data/generated_dfs/county_pop_df.csv"), check.names = F)
-  out <- out[names(out) != ""]
-  return(out)
-}
