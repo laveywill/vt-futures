@@ -113,4 +113,39 @@ and so that the data can be updated in the future if needed.
 
   Writes all dataframes to CSVs. Requires the list of dataframes generated using the pull_data.R script. 
   
+## recommendations.R
+- **create_scaled_df**
+
+  Create dataframe with scoring for each capacity metric. Requires dataframe of county capacities built by our build_county_caps_df function,
+  dataframe of zoning information, and dataframe with job opening information. Takes input for weighting by category, current, and goal populations. 
+
+- **clean_scale_jobs**
+
+  Adds score to job opening dataframe for each county. Requires job opening dataframe. 
+
+- **clean_scale_capacity**
+
+  Adds score to county capacities opening dataframe for each county. Requires county capacities dataframe built by our build_county_caps_df function. 
+
+- **clean_scale_zoning**
+
+  Adds score to job opening dataframe for each county. Requires zoning dataframe. 
+
+- **plot_pop_recommendations**
+
+  Creates plot of population recommendations for each county based on scoring from the capacity metrics. Requires dataframe of scored metrics created
+  by our create_scaled_df function.  
+
+- **plot_county_capacities**
+
+  Plots the county capacity metrics for each county. Requires county capacities dataframe built by our build_county_caps_df function and
+  user input of county. 
+
+- **jobs_homes_index_scale**
+
+  Plots the jobs-homes index for each county on a scale. Requires county capacities dataframe built by our build_county_caps_df function and
+  user input of county. 
+  
+
+
 
