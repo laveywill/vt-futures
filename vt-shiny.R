@@ -22,7 +22,7 @@ source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
 source(paste0(pth, "/housing.R"))
-source(paste0(pth, "/recommendation_model.R"))
+source(paste0(pth, "/recommendations.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
@@ -122,14 +122,14 @@ ui <- page_fluid(
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "vt-futures-logo.png",
+                    file = "images/vt-futures-logo.png",
                     href = "https://vtfuturesproject.org/"
                   ),
                 ),
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "midd_math_stat.png",
+                    file = "images/midd_math_stat.png",
                     href = "https://www.middlebury.edu/college/academics/mathematics"
                   )
                 ),
