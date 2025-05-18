@@ -197,20 +197,24 @@ plot_pop_adjustments <- function(scaled_df) {
           y = ifelse(bar_type == "Adjustment" & diff < 0, ymax_adj - 50, ymax_adj + 50),
           label = comma(round(if_else(bar_type == "Adjustment", diff, ymax_adj)))
       ),
-      size = 3,
+      size = 3.5,
       hjust = 0.05,
       vjust = -0.2,
+      angle = 45,
       fontface = "bold",
-      inherit.aes = FALSE
+      inherit.aes = FALSE,
+      color = "grey40"
     ) +
     scale_x_discrete(labels = levels(df_plot$County)) +
     scale_fill_manual(values = c("Proportional Goal" = "grey70", "Increase" = "forestgreen", "Decrease" = "firebrick")) +
     labs(x = "County", y = "Population", fill = "", 
-         title = "VFP Population Goal Adjustments by County") +
+         title = "VFP Population Goal Adjustments by County",
+         subtitle = "The gray bars represent the initial proportional population goal") +
     theme_minimal() + 
     theme(
       legend.position = "none",
       legend.text = element_text(size = 12),
+      plot.subtitle = element_text(size = 18),
       text = element_text(family = "Georgia"),
       axis.title.x = element_text(size = 16, face = "bold"),
       axis.title.y = element_text(size = 16, face = "bold"),
