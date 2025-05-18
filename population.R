@@ -88,67 +88,6 @@ plot_age_distribution <- function(state_df, national_df, compare_df) {
       plot.title = element_text(size = 22, face = "bold")
     )
 }
-plot_county_capacities <- function(df, county) {
-  ggplot(df %>% 
-           mutate(Metric = factor(Metric, levels = c("pop_goal", "latent_cap", "latent_cap_school"))),
-         aes(x = Metric, y = Value, fill = Metric)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(title = paste("County Capacity Limitations:", county, "\n"), 
-         x = "\nMetric", y = "Value") +
-    theme_minimal() +
-    scale_x_discrete(labels = c(
-      "latent_cap" = "Latent Capacity",
-      "latent_cap_school" = "School Latency",
-      "pop_goal" = "Population Goal"
-    )) + 
-    scale_fill_manual(values = c(
-      "latent_cap" = "deepskyblue1",
-      "latent_cap_school" = "red",
-      "pop_goal" = "aquamarine4"
-    )) +
-    theme(legend.position = "none", 
-          text = element_text(family = "Georgia"),
-          plot.margin = margin(t = 10, r = 10, b = 40, l = 10),
-          axis.title.x = element_text(size = 16, face = "bold"),
-          axis.title.y = element_text(size = 16, face = "bold"),
-          axis.text.x = element_text(size = 14, face = "bold"),
-          axis.text.y = element_text(size = 14, face = "bold"),
-          plot.title = element_text(size = 22, face = "bold"))
-}
-
-
-
-jobs_homes_index_scale <- function(df, county) {
-  data <- df %>%
-    filter(County == county)
-  val <- round(data$jobs_homes_index, 2)
-  gradient_data <- data.frame(x = seq(0, 2, length.out = 200))
-  
-  ggplot() +
-    geom_tile(data = gradient_data, aes(x = x, y = 1, fill = x), height = 0.3) +
-    
-    geom_segment(aes(x = val, xend = val, y = 0.85, yend = 1.15), 
-                 color = "black", size = 1.5) +
-    
-    annotate("text", x = val, y = 1.3, label = paste(county, ":", val),
-             size = 4.5, fontface = "bold", hjust = 0.5, family = "Georgia") +
-    annotate("text", x = 0, y = 0.8, label = "0 (More homes)", hjust = 0, size = 5, family = "Georgia") +
-    annotate("text", x = 1, y = 0.8, label = "1 (Balanced)", hjust = 0.5, size = 5, family = "Georgia") +
-    annotate("text", x = 2, y = 0.8, label = "2 (More jobs)", hjust = 1, size = 5, family = "Georgia") +
-    
-    scale_fill_gradient(low = "lightblue", high = "yellow") +
-    
-    scale_x_continuous(limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2)) +
-    coord_cartesian(clip = "off") +
-    labs(title = "Jobs-Homes Index\n") +
-    theme_void() +
-    theme(
-      plot.title = element_text(size = 20, face = "bold", family = "Georgia"),
-      legend.position = "none",
-      plot.margin = margin(5, 10, 5, 10)
-    )
-  
-}
 
 plot_county_map_population <- function(df, county_col, show_diff = FALSE) {
   percent_cols <- c(

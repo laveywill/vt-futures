@@ -4,20 +4,15 @@ library(leaflet)
 library(sf)
 library(tidyverse)
 library(tigris)
-library(censusapi)
-library(tidycensus)
 library(bslib)
 library(scales)
 library(readxl)
 library(DT)
-library(readxl)
 library(shinydashboard)
 library(rlang)
 library(forcats)
 library(data.table)
 library(plotly)
-library(geojsonsf)
-library(purrr)
 library(gridExtra)
 library(googledrive)
 
@@ -27,7 +22,7 @@ source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
 source(paste0(pth, "/housing.R"))
-source(paste0(pth, "/recommendation_model.R"))
+source(paste0(pth, "/recommendations.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
@@ -47,7 +42,7 @@ homes_variables = c(
 jobs_variables = c(
   "Labor Force", "Unemployed Population", 
   "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
-  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
+  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport"
 )
 
 zoning_variables = c(
@@ -128,14 +123,14 @@ ui <- page_fluid(
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "vt-futures-logo.png",
+                    file = "images/vt-futures-logo.png",
                     href = "https://vtfuturesproject.org/"
                   ),
                 ),
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "midd_math_stat.png",
+                    file = "images/midd_math_stat.png",
                     href = "https://www.middlebury.edu/college/academics/mathematics"
                   )
                 ),
