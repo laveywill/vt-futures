@@ -33,66 +33,9 @@ create_scaled_df <- function(weights = c(0.25, 0.25, 0.25, 0.25),
       adj_pop_proportion = adjusted_pop / sum(adjusted_pop),
       rescaled_pop = floor(goal_increase * adj_pop_proportion)
     )
-    
-    
+        
   return(out)
 }
-
-plot_pop_adjustments <- function(scaled_df) {
-  
-  # each county is plotted here
-  # plotting pop_goal as its own bar, 
-  # directly next to that bar
-  # if rescaled_pop > pop_goal,
-  #   plot pop_goal as blank and rescaled_pop-pop_goal as color above it
-  # if rescaled_pop < pop_goal,
-  #   plot rescaled_pop as blank and pop_goal-rescaled_pop as color above it
-  
-  df_base <- scaled_df |> 
-    mutate(
-      diff = rescaled_pop - pop_goal,
-      County = factor(County)
-    ) |> 
-    select(County, pop_goal, rescaled_pop, diff)
-  
-  df_plot <- bind_rows(
-    df_base |> 
-      mutate(bar_type = "Goal", ymin = 0, ymax = pop_goal),
-
-    df_base |> 
-      mutate(
-        bar_type = "Adjustment",
-        ymin = pop_goal,
-        ymax = pop_goal + diff
-      )
-  )
-  
-  df_plot <- df_plot |> 
-    mutate(ymin_adj = pmin(ymin, ymax),
-           ymax_adj = pmax(ymin, ymax),
-           fill_color = case_when(
-             bar_type == "Goal" ~ "Proportional Goal",
-             diff >= 0 ~ "Increase",
-             TRUE ~ "Decrease"
-           ))
-  
-  df_plot |> 
-    ggplot(aes(x = County, fill = fill_color)) +
-    geom_rect(aes(xmin = as.numeric(County) - 0.3 + 
-                    ifelse(bar_type == "Adjustment", 0.35, 0),
-                  xmax = as.numeric(County) - 0.3 + 
-                    ifelse(bar_type == "Adjustment", 0.65, 0.3),
-                  ymin = ymin_adj, ymax = ymax_adj)) +
-    scale_x_discrete(breaks = 1:length(levels(df_plot$County)), labels = levels(df_plot$County)) +
-    scale_fill_manual(values = c("Proportional Goal" = "grey70", "Increase" = "forestgreen", "Decrease" = "firebrick")) +
-    labs(x = "County", y = "Population", fill = "", 
-         title = "Population Goal and Adjustment by County") +
-    theme_minimal()
-  
-  return(p)
-}
-
-
 
 clean_scale_jobs <- function(job_opening_df) {
   
@@ -150,23 +93,6 @@ clean_scale_zoning <- function(zoning_df) {
     mutate(zoning_score = scale(zoning_score))
   
   return(final)
-}
-
-plot_pop_recommendations <- function(scored_df) {
-  
-  df_long <- scored_df |> 
-    mutate(difference = rescaled_pop - pop_goal,
-           pop_goal = if_else(difference < 0, rescaled_pop)) |> 
-    pivot_longer(
-      cols = c(pop_goal, difference),
-      names_to = "type",
-      values_to = "value"
-    )
-  
-  df_long |> 
-    ggplot() +
-    geom_col(aes(x = County, y = value, fill = type), position = "stack")
-  
 }
 
 plot_county_capacities <- function(df, county) {
@@ -228,3 +154,72 @@ jobs_homes_index_scale <- function(df, county) {
     )
   
 }
+
+plot_pop_adjustments <- function(scaled_df) {
+  
+  df_base <- scaled_df |> 
+    mutate(
+      diff = rescaled_pop - pop_goal,
+      County = factor(County)
+    ) |> 
+    select(County, pop_goal, rescaled_pop, diff)
+  
+  df_plot <- bind_rows(
+    df_base |> 
+      mutate(bar_type = "Goal", ymin = 0, ymax = pop_goal),
+    
+    df_base |> 
+      mutate(
+        bar_type = "Adjustment",
+        ymin = pop_goal,
+        ymax = pop_goal + diff
+      )
+  )
+  
+  df_plot <- df_plot |> 
+    mutate(ymin_adj = pmin(ymin, ymax),
+           ymax_adj = pmax(ymin, ymax),
+           fill_color = case_when(
+             bar_type == "Goal" ~ "Proportional Goal",
+             diff >= 0 ~ "Increase",
+             TRUE ~ "Decrease"
+           ))
+  
+  p <- df_plot |> 
+    ggplot(aes(x = County, fill = fill_color)) +
+    geom_rect(aes(
+      xmin = as.numeric(County) + ifelse(bar_type == "Adjustment", 0.50, 0) - 0.5,
+      xmax = as.numeric(County) + ifelse(bar_type == "Adjustment", .95, 0.45) - 0.5,
+      ymin = ymin_adj, ymax = ymax_adj)
+    ) +
+    geom_text(
+      aes(x = as.numeric(County) + ifelse(bar_type == "Adjustment", 0.50, 0) - 0.4,
+          y = ifelse(bar_type == "Adjustment" & diff < 0, ymax_adj - 50, ymax_adj + 50),
+          label = comma(round(if_else(bar_type == "Adjustment", diff, ymax_adj)))
+      ),
+      size = 3,
+      hjust = 0.05,
+      vjust = -0.2,
+      fontface = "bold",
+      inherit.aes = FALSE
+    ) +
+    scale_x_discrete(labels = levels(df_plot$County)) +
+    scale_fill_manual(values = c("Proportional Goal" = "grey70", "Increase" = "forestgreen", "Decrease" = "firebrick")) +
+    labs(x = "County", y = "Population", fill = "", 
+         title = "VFP Population Goal Adjustments by County") +
+    theme_minimal() + 
+    theme(
+      legend.position = "none",
+      legend.text = element_text(size = 12),
+      text = element_text(family = "Georgia"),
+      axis.title.x = element_text(size = 16, face = "bold"),
+      axis.title.y = element_text(size = 16, face = "bold"),
+      axis.text.x = element_text(size = 12, face = "bold", angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 22, face = "bold")
+    )
+  
+  return(p)
+}
+  
+  

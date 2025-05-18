@@ -49,6 +49,8 @@ zoning_variables = c(
   "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance"
 )
 
+metric_labels = c("Latent Capacity", "School Latency", "Zoning Score", "Job Opening Score")
+
 
 #### Read in data ####
 
@@ -418,7 +420,36 @@ ui <- page_fluid(
     nav_panel(
       "Recommendations",
       card(
-        card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
+        p("explanation about hte model and how it works")
+      ),
+      card(
+        card_header(class = "bg-primary", "VFP County-Level Population Goal Adjustments"),
+        card_body(
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              width = "300px",
+              card(
+                card_header(class="bg-secondary", "Model Inputs"),
+                sliderInput( 
+                  "pop_goal_slider", "Population Goal Slider", 
+                  min = 700000, max = 1000000, 
+                  value = 802000, ticks = F
+                ),
+                p("How much importance should be placed on these metrics in our model? (1 is more important than 0)"),
+                sliderInput("w1", metric_labels[1], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w2", metric_labels[2], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w3", metric_labels[3], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w4", metric_labels[4], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+              )
+              
+            ),
+            plotOutput("pop_model_plot", height = "700px")
+          )
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County-Level Capacity Limiting Metrics"),
         card_body(
           layout_sidebar(
             sidebar = sidebar(
@@ -606,6 +637,31 @@ server <- function(input, output, session) {
   
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
+  })
+  
+  #### POP MODEL PLOTS ####
+  
+  weights_input <- reactive({
+    w_raw <- c(input$w1, input$w2, input$w3, input$w4)
+    if (sum(w_raw) == 0) rep(0.25, 4) else w_raw / sum(w_raw)
+  })
+  
+  scaled_df <- reactive({
+    create_scaled_df(
+      weights = weights_input(),
+      goal = input$pop_goal_slider,
+      county_caps_df = build_county_caps_df(county_pop_df, 
+                                            csv_list$latent_capacity, 
+                                            csv_list$JobsHomesMap_data_formatted,
+                                            csv_list$teacher_information,
+                                            goal_pop = input$pop_goal_slider),
+      zoning_df = zoning,
+      county_job_opening_df = county_job_opening_df
+    )
+  })
+  
+  output$pop_model_plot <- renderPlot({
+    plot_pop_adjustments(scaled_df())
   })
   
 }

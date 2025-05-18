@@ -123,13 +123,13 @@ process_housing_data <- function(housing_df) {
   return(out)
 }
 
-build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, teacher_info) {
+build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, teacher_info, goal_pop = 80200) {
   
   vt_pop <- sum(pop_df$B01001_001E)
   
   pop_df <- pop_df %>% 
     rename( "population" = "B01001_001E") %>%
-    mutate(pop_goal = floor((population/vt_pop)*(802000 - 647464)),
+    mutate(pop_goal = floor((population/vt_pop)*(goal_pop - 647464)),
            County = str_trim(str_remove(NAME, "County, Vermont"))
     ) %>% select(County, pop_goal, population)
   
