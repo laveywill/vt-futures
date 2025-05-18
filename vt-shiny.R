@@ -67,6 +67,8 @@ sf_files <- all_files[!grepl("\\.csv$|\\.geojson$", all_files$name), ]
 census_variables <- get_census_variables()
 
 csv_list <- get_csv_data(csv_files)
+zoning <- get_zoning_data(geojson_files)
+
 state <- csv_list$state
 county <- csv_list$county
 town <- csv_list$town
@@ -76,11 +78,10 @@ county_pop_df <- csv_list$county_pop_df
 
 housing <- csv_list$housing |> 
   process_housing_data()
-zoning <- get_zoning_data(geojson_files)
 
 labor_force_df <- csv_list$labor_force_df
-
-job_openings_long <- process_job_opening_df(csv_list$job_openings_long)
+long <- csv_list$job_openings_long
+job_openings_long <- process_job_opening_df(long)
 county_job_opening_df <- csv_list$county_job_opening_df
 rank_df <- csv_list$rank_df
 
@@ -593,7 +594,7 @@ server <- function(input, output, session) {
   #### JOB PLOTS ####
   
   output$job_opening_plot <- renderPlot({
-    plot_job_opening_rate(csv_list$job_openings_long)
+    plot_job_opening_rate(job_openings_long)
   })
   
   output$county_rank_plot <- renderPlot({

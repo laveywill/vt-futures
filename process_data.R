@@ -168,8 +168,9 @@ build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, 
 }
 
 process_job_opening_df <- function(job_openings_long) {
-  out <- job_openings_long |> 
-    mutate(date = as.Date(date, format = "%Y-%m-%d"))
+  
+  out <- job_openings_long
+  out$date <- as.Date(out$date, format = "%Y-%m-%d")
   
   return(out)
 }
