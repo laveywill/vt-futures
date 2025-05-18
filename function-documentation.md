@@ -15,7 +15,7 @@
   Creates the state map on the population page. Requires the county-level census dataframe. National averages, which come from
   the [census bureau](https://www.census.gov/quickfacts/fact/table/US/PST045224) for each variable are hard-coded into a list as    part of this function. To update these averages, replace them in this function. 
 
-## homes.R
+## housing.R
 - **plot_state_housing**
 
   Creates plot of when housing was built in Vermont. Requires full dataframe of housing information in Vermont. 
