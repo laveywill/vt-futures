@@ -4,32 +4,28 @@ library(leaflet)
 library(sf)
 library(tidyverse)
 library(tigris)
-library(censusapi)
-library(tidycensus)
 library(bslib)
 library(scales)
 library(readxl)
 library(DT)
-library(readxl)
 library(shinydashboard)
 library(rlang)
 library(forcats)
 library(data.table)
 library(plotly)
-library(geojsonsf)
-library(purrr)
 library(gridExtra)
+library(googledrive)
 
 pth <- getwd()
+source(paste0(pth, "/process_data.R"))
 source(paste0(pth, "/read_data.R"))
 source(paste0(pth, "/population.R"))
 source(paste0(pth, "/jobs.R"))
-source(paste0(pth, "/homes.R"))
-source(paste0(pth, "/recommendation_model.R"))
+source(paste0(pth, "/housing.R"))
+source(paste0(pth, "/recommendations.R"))
 
 #### Global Variables ####
 Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
-Sys.setenv(MAPBOX_TOKEN = "")
 year <- 2023
 state_fips <- 50
 
@@ -46,53 +42,61 @@ homes_variables = c(
 jobs_variables = c(
   "Labor Force", "Unemployed Population", 
   "High School Graduate or Equivalent", "Bachelor's Degree", "Master's Degree", "Professional School Degree", "Doctorate Degree",
-  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport", "Mean Travel Time to Work (Minutes)"
+  "Total Workers", "Workers Who Drive Alone", "Workers Using Public Transport"
 )
 
 zoning_variables = c(
   "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance"
 )
 
+metric_labels = c("Latent Capacity", "School Latency", "Zoning Score", "Job Opening Score")
+
 
 #### Read in data ####
+
+folder_id <- "1IlANNyHgUhrQPuZXcgKt00Kl1vo3G3mF"
+all_files <- drive_ls(as_id(folder_id))
+
+csv_files <- all_files[grepl("\\.csv$", all_files$name), ]
+geojson_files <- all_files[grepl("\\.geojson$", all_files$name), ]
+sf_files <- all_files[!grepl("\\.csv$|\\.geojson$", all_files$name), ]
+
 census_variables <- get_census_variables()
-census_data <- census_data(year)
-state <- census_data$state
-county <- census_data$county
-town <- census_data$place
-natl <- census_data$natl
-collierFL <- census_data$collierFL
-# state <- read.csv(paste0(pth, "/data/generated_dfs/state.csv"))
-# county <- read.csv(paste0(pth, "/data/generated_dfs/county.csv"))
-# town <- read.csv(paste0(pth, "/data/generated_dfs/town.csv"))
-# natl <- read.csv(paste0(pth, "/data/generated_dfs/natl.csv"))
-# collierFL <- read.csv(paste0(pth, "/data/generated_dfs/collierFL.csv"))
 
-# housing <- get_housing_data(year)
-# zoning <- get_zoning_data()
-housing <- read.csv(paste0(pth, "/data/generated_dfs/housing.csv"))
-# zoning <- read.csv(paste0(pth, "/data/generated_dfs/zoning.csv", sep = ","))
-zoning <- get_zoning_data()
+csv_list <- get_csv_data(csv_files)
+zoning <- get_zoning_data(geojson_files)
 
-# labor_force_df <- get_lf_data()
-# prime_age_df <- get_prime_age_data(labor_force_df)
-# dependency_df <- get_dependency_data(labor_force_df)
-# job_opening_df <- get_job_openings_data()
-# county_job_opening_df <- get_county_job_openings_data()
-# rank_df <- get_rank_data()
-labor_force_df <- read.csv(paste0(pth, "/data/generated_dfs/labor_force_df.csv"))
-job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"))
-dependency_df <- read.csv(paste0(pth, "/data/generated_dfs/dependency_df.csv"))
-job_opening_df <- read.csv(paste0(pth, "/data/generated_dfs/job_opening_df.csv"))
-rank_df <- get_rank_data()
+state <- csv_list$state
+county <- csv_list$county
+town <- csv_list$town
+natl <- csv_list$natl
+collierFL <- csv_list$collierFL
+county_pop_df <- csv_list$county_pop_df
 
+housing <- csv_list$housing |> 
+  process_housing_data()
+
+labor_force_df <- csv_list$labor_force_df
+long <- csv_list$job_openings_long
+job_openings_long <- process_job_opening_df(long)
+county_job_opening_df <- csv_list$county_job_opening_df
+rank_df <- csv_list$rank_df
+
+sf_list <- get_sf_data(sf_files)
+vt_map <- county_level_map(sf_list$county, county)
+town_map <- town_level_map(sf_list$town)
+
+#### Process data ####
 state_age_data <- build_age_df(state)
 county_age_data <- build_county_age_df(county)
 natl_age_data <- build_age_df(natl)
 collierFL_age_data <- build_age_df(collierFL)
-vt_map <- county_level_map(county)
-town_map <- town_level_map()
 county_town_association <- town_map |> data.frame() |> select(TOWNNAMEMC, NAME) 
+
+prime_age_df <- process_prime_age_data(labor_force_df)
+dependency_df <- process_dependency_data(labor_force_df)
+
+#### UI #### 
 
 theme <- bs_theme(
   primary = "darkgreen", secondary = "#2c3e50",
@@ -100,8 +104,6 @@ theme <- bs_theme(
   heading_font = c("Georgia", "sans-serif"),
   "input-border-color" = "darkgreen"
 )
-
-#### UI #### 
 
 #### HOME PAGE ####
 
@@ -123,14 +125,14 @@ ui <- page_fluid(
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "vt-futures-logo.png",
+                    file = "images/vt-futures-logo.png",
                     href = "https://vtfuturesproject.org/"
                   ),
                 ),
                 card(
                   style = "width: 250px; height: 250px;",
                   card_image(
-                    file = "midd_math_stat.png",
+                    file = "images/midd_math_stat.png",
                     href = "https://www.middlebury.edu/college/academics/mathematics"
                   )
                 ),
@@ -277,8 +279,17 @@ ui <- page_fluid(
               div(class = "mb-2", strong("Vacant Housing Units:"), "10%"),
               div(class = "mb-2", strong("Owner-Occupied Housing Units:"), "59%"),
               div(class = "mb-2", strong("Renter-Occupied Housing Units:"), "31%")
-            ),
-            tags$div(style = "height: 150px;"),
+            )
+          ),
+          plotOutput("housing_map_plot", height = "900px"),
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "Zoning Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
             card(
               class = "bg-light p-3 shadow-sm",
               card_header("Town-Level Zoning Exploration", class = "bg-secondary text-white"),
@@ -304,8 +315,8 @@ ui <- page_fluid(
               )
             )
           ),
-          plotOutput("housing_map_plot", height = "1200px"),
-          leafletOutput("town_leaflet", height = "400px")
+          plotOutput("county_town_map", height = "400px"),
+          leafletOutput("town_leaflet", height = "500px")
         )
       )
     ),
@@ -314,105 +325,134 @@ ui <- page_fluid(
     
     nav_panel(
       "Jobs",
-      layout_column_wrap(
-        width = 1,
-        card(
-          card_header(class = "bg-primary", "State Jobs"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Vermonters’ top economic concern is affordability. Demographics are the
-                  key factor increasing cost of living. According to the United Nations, a high dependency ratio
-                  indicates that the economically active population and the overall economy face a greater burden to support and
-                  provide the social services needed by children and by older persons who are often economically dependent.
-                  In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
-                  workforce and a healthy tax base to support demand on public services. While the overall population size has
-                  remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
-                ),
+      card(
+        card_header(class = "bg-primary", "State Jobs"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Vermonters’ top economic concern is affordability. Demographics are the
+                key factor increasing cost of living. According to the United Nations, a high dependency ratio
+                indicates that the economically active population and the overall economy face a greater burden to support and
+                provide the social services needed by children and by older persons who are often economically dependent.
+                In the past, Vermont had a large working-age population relative to the young and elderly, providing a robust
+                workforce and a healthy tax base to support demand on public services. While the overall population size has
+                remained relatively stagnant since 2000, the composition of Vermont’s population has shifted dramatically."
               ),
-              mainPanel(
-                plotOutput("jobs_plot", height = "500px")
-              )
+            ),
+            mainPanel(
+              plotOutput("jobs_plot", height = "500px")
             )
           )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              bg = "lightgrey",
-              selectInput("job_county_col", 
-                          label = "Select a County to Explore",
-                          choices = county$NAME)
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            bg = "lightgrey",
+            selectInput("job_county_col", 
+                        label = "Select a County to Explore",
+                        choices = county$NAME)
+          ),
+          plotOutput("jobs_county")
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County Level Exploration"),
+        layout_sidebar(
+          sidebar = sidebar(
+            width = 425,
+            bg = "lightgrey",
+            selectInput(
+              "jobs_var_col", 
+              label = "Select a Variable to Explore",
+              choices = jobs_variables
             ),
-            plotOutput("jobs_county")
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "County Level Exploration"),
-          layout_sidebar(
-            sidebar = sidebar(
-              width = 425,
-              bg = "lightgrey",
-              selectInput(
-                "jobs_var_col", 
-                label = "Select a Variable to Explore",
-                choices = jobs_variables
-              ),
-              conditionalPanel(
-                condition = "input.jobs_var_col != `Labor Force`",
-                checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
-              ),
-              card(
-                class = "bg-light p-3 shadow-sm",
-                card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
-                div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
-                div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
-                div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
-                div(class = "mb-2", strong("Master's Degree*:"), "9.4%"),
-                div(class = "mb-2", strong("Doctorate Degree*:"), "2.1%"),
-                div(class = "mb-2", strong("Professional School Degree*:"), "1.5%"),
-                div(class = "mb-2", strong("Workers Who Drive Alone:"), "77%"),
-                div(class = "mb-2", strong("Workers Using Public Transport:"), "5%"),
-                div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
-                div(class = "mb-2", "*indicates highest level of education at this level"),
-              )
+            conditionalPanel(
+              condition = "input.jobs_var_col != `Labor Force`",
+              checkboxInput("show_natl_diff", "Show Difference From National Average", value = FALSE)
             ),
-            plotOutput("jobs_county_map", height = "400px")
-          )
-        ),
-        card(
-          card_header(class = "bg-primary", "Dependency Ratio"),
-          card_body(
-            sidebarLayout(
-              sidebarPanel(
-                p("Dependency Ratio")
-              ),
-              mainPanel(
-                plotOutput("dependency_plot", height = "400px")
-              )
+            card(
+              class = "bg-light p-3 shadow-sm",
+              card_header("How Does Your County Compare to National Stats? ", class = "bg-secondary text-white"),
+              div(class = "mb-2", strong("Unemployed Population:"), "4.2%"),
+              div(class = "mb-2", strong("High School Graduate or Equivalent*:"), "27.9%"),
+              div(class = "mb-2", strong("Bachelor's Degree*:"), "23.5%"),
+              div(class = "mb-2", strong("Master's Degree*:"), "9.4%"),
+              div(class = "mb-2", strong("Doctorate Degree*:"), "2.1%"),
+              div(class = "mb-2", strong("Professional School Degree*:"), "1.5%"),
+              div(class = "mb-2", strong("Workers Who Drive Alone:"), "77%"),
+              div(class = "mb-2", strong("Workers Using Public Transport:"), "5%"),
+              div(class = "mb-2", strong("Mean Travel Time to Work (Minutes):"), "27"),
+              div(class = "mb-2", "*indicates highest level of education at this level"),
+            )
+          ),
+          plotOutput("jobs_county_map", height = "400px")
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "Dependency Ratio"),
+        card_body(
+          sidebarLayout(
+            sidebarPanel(
+              p("Dependency Ratio")
+            ),
+            mainPanel(
+              plotOutput("dependency_plot", height = "400px")
             )
           )
-        ),
-        
-        card(
-          card_header(class = "bg-primary", "Job Openings"),
-          card_body(
-            plotOutput("job_opening_plot", height = "400px")
-          )
-        ), 
-        card(
-          card_header(class = "bg-primary", "County Rankings"),
-          card_body(
-            plotOutput("county_rank_plot", height = "400px")
-          )
-        ),
-      )
+        )
+      ),
+      
+      card(
+        card_header(class = "bg-primary", "Job Openings"),
+        card_body(
+          plotOutput("job_opening_plot", height = "400px")
+        )
+      ), 
+      card(
+        card_header(class = "bg-primary", "County Rankings"),
+        card_body(
+          plotOutput("county_rank_plot", height = "400px")
+        )
+      ),
     ),
     nav_panel(
       "Recommendations",
       card(
-        card_header(class = "bg-primary", "County-Level Breakdown of VFP Population Goals"),
+        p("The goal breakdown by county begins with a proportional allocation
+          to each county based on how much of the population that county holds currently.
+           An adjustment is made via scaling metrics relating to how zonable the county is, its
+           previous maximum capcity, school capacity and more.")
+      ),
+      card(
+        card_header(class = "bg-primary", "VFP County-Level Population Goal Adjustments"),
+        card_body(
+          layout_sidebar(
+            sidebar = sidebar(
+              bg = "lightgrey",
+              width = "300px",
+              card(
+                card_header(class="bg-secondary", "Model Inputs"),
+                sliderInput( 
+                  "pop_goal_slider", "Population Goal Slider", 
+                  min = 700000, max = 1000000, 
+                  value = 802000, ticks = F
+                ),
+                p("How much importance should be placed on these metrics in our model? (1 is more important than 0)"),
+                sliderInput("w1", metric_labels[1], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w2", metric_labels[2], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w3", metric_labels[3], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+                sliderInput("w4", metric_labels[4], min = 0, max = 1, value = 0.25, step = 0.05, ticks=F),
+              )
+              
+            ),
+            plotOutput("pop_model_plot", height = "700px")
+          )
+        )
+      ),
+      card(
+        card_header(class = "bg-primary", "County-Level Capacity Limiting Metrics"),
         card_body(
           layout_sidebar(
             sidebar = sidebar(
@@ -472,7 +512,10 @@ server <- function(input, output, session) {
   #### POPULATION PLOTS ####
   
   county_caps_df <- reactive({
-    build_county_caps_df()
+    build_county_caps_df(county_pop_df, 
+                         csv_list$latent_capacity, 
+                         csv_list$JobsHomesMap_data_formatted,
+                         csv_list$teacher_information)
   })
   
   observe({
@@ -539,8 +582,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # Map interactivity functionality housing page
-  
   observeEvent(input$zoning_county, {
     towns <- county_town_association %>%
       filter(NAME == input$zoning_county) %>%
@@ -557,16 +598,16 @@ server <- function(input, output, session) {
   output$housing_map_plot <- renderPlot({
     
     req(input$homes_var_col)
-    req(input$zoning_county)
     show_diff <- isTRUE(input$show_natl_diff)
-    main_map <- plot_county_map_homes(df = vt_map,
-                                      county_col = input$homes_var_col,
-                                      show_diff = show_diff)
-    
-    county_town_map <- plot_county_map(town_level_df = town_map,
-                                       county_selection = input$zoning_county)
-    
-    plot_grobs(main_map, county_town_map)
+    plot_county_map_homes(df = vt_map,
+                          county_col = input$homes_var_col,
+                          show_diff = show_diff)
+  })
+  
+  output$county_town_map <- renderPlot({
+    req(input$zoning_county)
+    plot_county_map(town_level_df = town_map,
+                    county_selection = input$zoning_county)
   })
   
   output$town_leaflet <- renderLeaflet({
@@ -582,7 +623,7 @@ server <- function(input, output, session) {
   #### JOB PLOTS ####
   
   output$job_opening_plot <- renderPlot({
-    plot_job_opening_rate(job_opening_df)
+    plot_job_opening_rate(job_openings_long)
   })
   
   output$county_rank_plot <- renderPlot({
@@ -599,6 +640,31 @@ server <- function(input, output, session) {
   
   output$dependency_plot <- renderPlot({
     plot_dependency_ratio(dependency_df)
+  })
+  
+  #### POP MODEL PLOTS ####
+  
+  weights_input <- reactive({
+    w_raw <- c(input$w1, input$w2, input$w3, input$w4)
+    if (sum(w_raw) == 0) rep(0.25, 4) else w_raw / sum(w_raw)
+  })
+  
+  scaled_df <- reactive({
+    create_scaled_df(
+      weights = weights_input(),
+      goal = input$pop_goal_slider,
+      county_caps_df = build_county_caps_df(county_pop_df, 
+                                            csv_list$latent_capacity, 
+                                            csv_list$JobsHomesMap_data_formatted,
+                                            csv_list$teacher_information,
+                                            goal_pop = input$pop_goal_slider),
+      zoning_df = zoning,
+      county_job_opening_df = county_job_opening_df
+    )
+  })
+  
+  output$pop_model_plot <- renderPlot({
+    plot_pop_adjustments(scaled_df())
   })
   
 }
