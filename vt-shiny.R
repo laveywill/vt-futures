@@ -420,7 +420,10 @@ ui <- page_fluid(
     nav_panel(
       "Recommendations",
       card(
-        p("explanation about hte model and how it works")
+        p("The goal breakdown by county begins with a proportional allocation
+          to each county based on how much of the population that county holds currently.
+           An adjustment is made via scaling metrics relating to how zonable the county is, its
+           previous maximum capcity, school capacity and more.")
       ),
       card(
         card_header(class = "bg-primary", "VFP County-Level Population Goal Adjustments"),
