@@ -123,7 +123,7 @@ process_housing_data <- function(housing_df) {
   return(out)
 }
 
-build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, teacher_info, goal_pop = 80200) {
+build_county_caps_df <- function(pop_df, latent_capacity_df, jobs_homes_map_df, teacher_info, goal_pop = 802000) {
   
   vt_pop <- sum(pop_df$B01001_001E)
   

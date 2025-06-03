@@ -25,7 +25,7 @@ source(paste0(pth, "/housing.R"))
 source(paste0(pth, "/recommendations.R"))
 
 #### Global Variables ####
-Sys.setenv(CENSUS_KEY = "d2c6932eca5b04592aaa4b32840c534b274382dc")
+Sys.setenv(CENSUS_KEY = Sys.getenv("CENSUS_KEY"))
 year <- 2023
 state_fips <- 50
 
@@ -53,6 +53,10 @@ metric_labels = c("Latent Capacity", "School Latency", "Zoning Score", "Job Open
 
 
 #### Read in data ####
+
+# If wishing to run the app locally, and receiving issues with authentication, 
+# comment the line below, and you will be prompted to provide your google drive credentials
+drive_auth(path = Sys.getenv("GDRIVE_KEY_PATH"))
 
 folder_id <- "1IlANNyHgUhrQPuZXcgKt00Kl1vo3G3mF"
 all_files <- drive_ls(as_id(folder_id))

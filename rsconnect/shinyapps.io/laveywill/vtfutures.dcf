@@ -5,9 +5,8 @@ account: laveywill
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14462321
-bundleId: 10252626
+bundleId: 10307665
 url: https://laveywill.shinyapps.io/vtfutures/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: ACRPC_Zoning.geojson|county_capacity_module.R|function_for_job_opening.Rmd|job_opening_rate.Rmd|README.md|recommendations.qmd|vt-shiny.R
