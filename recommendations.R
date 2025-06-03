@@ -62,7 +62,7 @@ clean_scale_capacity <- function(county_caps_df) {
 
 clean_scale_zoning <- function(zoning_df) {
   
-  zoning_clean <- zoning |> 
+  zoning_clean <- zoning_df |> 
     select(c("County", "District Name",
              "1F Allowance", "2F Allowance", "3F Allowance", "4F Allowance", "5F Allowance",
              "Shape_Area", "Acres", "geometry"))
