@@ -45,52 +45,124 @@ town_level_map <- function(town_shp_df) {
   return(vt_towns)
 }
 
+# get_zoning_data <- function(geojson_files) {
+#   
+#   zoning_list <- lapply(geojson_files$id, function(file_id) {
+#     temp_path <- tempfile(fileext = ".geojson")
+#     drive_download(as_id(file_id), path = temp_path, overwrite = T)
+#     out <- read_sf(temp_path)
+#   })
+#   
+#   out <- rbindlist(zoning_list, fill = TRUE) |> 
+#     select(-`Bylaw Date`) |> 
+#     mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
+#   
+#   return(out)
+# }
+
 get_zoning_data <- function(geojson_files) {
   
   zoning_list <- lapply(geojson_files$id, function(file_id) {
     temp_path <- tempfile(fileext = ".geojson")
-    drive_download(as_id(file_id), path = temp_path, overwrite = T)
-    out <- read_sf(temp_path)
+    
+    # Construct direct download URL
+    download_url <- paste0("https://drive.google.com/uc?export=download&id=", file_id)
+    
+    # Download using curl without auth
+    curl::curl_download(url = download_url, destfile = temp_path, mode = "wb")
+    
+    # Read the geojson file as sf object
+    out <- sf::read_sf(temp_path)
+    return(out)
   })
   
-  out <- rbindlist(zoning_list, fill = TRUE) |> 
-    select(-`Bylaw Date`) |> 
-    mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
+  out <- data.table::rbindlist(zoning_list, fill = TRUE) |> 
+    dplyr::select(-`Bylaw Date`) |> 
+    dplyr::mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
   
   return(out)
 }
 
+# get_sf_data <- function(file_list) {
+#   temp_dir <- tempdir()
+#   
+#   lapply(seq_len(nrow(file_list)), function(i) {
+#     drive_download(as_id(file_list$id[i]),
+#                    path = file.path(temp_dir, file_list$name[i]),
+#                    overwrite = TRUE)
+#   })
+#   
+#   shp_paths <- list.files(temp_dir, pattern = "\\.shp$", full.names = TRUE)
+#   
+#   out <- lapply(shp_paths, st_read)
+#   names(out) <- c("county", "town")
+#   
+#   return(out)
+# }
 get_sf_data <- function(file_list) {
   temp_dir <- tempdir()
   
+  # Download all files in file_list
   lapply(seq_len(nrow(file_list)), function(i) {
-    drive_download(as_id(file_list$id[i]),
-                   path = file.path(temp_dir, file_list$name[i]),
-                   overwrite = TRUE)
+    file_id <- file_list$id[i]
+    file_name <- file_list$name[i]
+    dest_path <- file.path(temp_dir, file_name)
+    
+    download_url <- paste0("https://drive.google.com/uc?export=download&id=", file_id)
+    curl::curl_download(url = download_url, destfile = dest_path, mode = "wb")
   })
   
+  # List all .shp files in temp_dir
   shp_paths <- list.files(temp_dir, pattern = "\\.shp$", full.names = TRUE)
   
-  out <- lapply(shp_paths, st_read)
+  out <- lapply(shp_paths, sf::st_read)
   names(out) <- c("county", "town")
   
   return(out)
 }
 
+# get_csv_data <- function(file_list) {
+#   
+#   csv_list <- lapply(file_list$id, function(file_id) {
+#     temp_path <- tempfile(fileext = ".csv")
+#     drive_download(as_id(file_id), path = temp_path, overwrite = T)
+#     out <- read.csv(temp_path, check.names = F)
+#   })
+#   
+#   names(csv_list) <- gsub("\\.csv$", "", csv_files$name)
+#   
+#   out <- lapply(csv_list, function(df) {
+#     df <- df[, names(df) != ""]
+#     return(df)
+#   })
+#   
+#   return(out)
+# }
+
 get_csv_data <- function(file_list) {
-  
-  csv_list <- lapply(file_list$id, function(file_id) {
+  csv_list <- lapply(seq_along(file_list$id), function(i) {
+    file_id <- file_list$id[i]
     temp_path <- tempfile(fileext = ".csv")
-    drive_download(as_id(file_id), path = temp_path, overwrite = T)
-    out <- read.csv(temp_path, check.names = F)
+    
+    # Construct public download URL
+    download_url <- paste0("https://drive.google.com/uc?export=download&id=", file_id)
+    
+    # Download using curl
+    curl::curl_download(url = download_url, destfile = temp_path, mode = "wb")
+    
+    # Read CSV
+    out <- read.csv(temp_path, check.names = FALSE)
+    return(out)
   })
   
-  names(csv_list) <- gsub("\\.csv$", "", csv_files$name)
+  # Use file names from input file_list
+  names(csv_list) <- gsub("\\.csv$", "", file_list$name)
   
-  out <- lapply(csv_list, function(df) {
+  # Remove empty-named columns, if any
+  csv_list <- lapply(csv_list, function(df) {
     df <- df[, names(df) != ""]
     return(df)
   })
   
-  return(out)
+  return(csv_list)
 }

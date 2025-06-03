@@ -15,6 +15,7 @@ library(data.table)
 library(plotly)
 library(gridExtra)
 library(googledrive)
+library(curl)
 
 pth <- getwd()
 source(paste0(pth, "/process_data.R"))
@@ -56,7 +57,8 @@ metric_labels = c("Latent Capacity", "School Latency", "Zoning Score", "Job Open
 
 # If wishing to run the app locally, and receiving issues with authentication, 
 # comment the line below, and you will be prompted to provide your google drive credentials
-drive_auth(path = Sys.getenv("GDRIVE_KEY_PATH"))
+# drive_auth(path = Sys.getenv("GDRIVE_KEY_PATH"))
+drive_deauth()
 
 folder_id <- "1IlANNyHgUhrQPuZXcgKt00Kl1vo3G3mF"
 all_files <- drive_ls(as_id(folder_id))
