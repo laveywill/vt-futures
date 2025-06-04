@@ -61,23 +61,14 @@ town_level_map <- function(town_shp_df) {
 # }
 
 get_zoning_data <- function(geojson_files) {
-  
   zoning_list <- lapply(geojson_files$id, function(file_id) {
     temp_path <- tempfile(fileext = ".geojson")
-    
-    # Construct direct download URL
-    download_url <- paste0("https://drive.google.com/uc?export=download&id=", file_id)
-    
-    # Download using curl without auth
-    curl::curl_download(url = download_url, destfile = temp_path, mode = "wb")
-    
-    # Read the geojson file as sf object
-    out <- sf::read_sf(temp_path)
-    return(out)
+    download_from_drive(file_id, temp_path)
+    sf::read_sf(temp_path)
   })
   
-  out <- data.table::rbindlist(zoning_list, fill = TRUE) |> 
-    dplyr::select(-`Bylaw Date`) |> 
+  out <- data.table::rbindlist(zoning_list, fill = TRUE) |>
+    dplyr::select(-`Bylaw Date`) |>
     dplyr::mutate(Jurisdiction = trimws(Jurisdiction, which = "right"))
   
   return(out)
@@ -165,4 +156,14 @@ get_csv_data <- function(file_list) {
   })
   
   return(csv_list)
+}
+
+download_from_drive <- function(file_id, destfile) {
+  # Use httr to follow redirects
+  url <- paste0("https://drive.google.com/uc?export=download&id=", file_id)
+  req <- httr::GET(url, httr::write_disk(destfile, overwrite = TRUE), httr::progress())
+  
+  if (httr::http_error(req)) {
+    stop("Failed to download file: ", httr::status_code(req))
+  }
 }

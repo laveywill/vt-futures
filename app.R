@@ -16,6 +16,7 @@ library(plotly)
 library(gridExtra)
 library(googledrive)
 library(curl)
+library(httr)
 
 pth <- getwd()
 source(paste0(pth, "/process_data.R"))
